@@ -23,6 +23,7 @@
     "ipfs": "^0.27.7",
     "ipfs-pubsub-room": "^1.1.5",
     "truffle-contract": "^3.0.3",
-    "uglify-js": "^3.3.11"
+    "uglify-js": "^3.3.11",
+    "web3": "^1.0.0-beta.30"
   }
 }
