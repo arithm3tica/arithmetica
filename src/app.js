@@ -6,24 +6,15 @@ var web3Provider = new Web3.providers.HttpProvider('http://localhost:9545');
 var web3 = new Web3(web3Provider);
 
 const Worker = require('./worker');
-var handleCreateProblemButtonClicked = require('./newProblem');
+var handleCreateProblemClicked = require('./newProblem');
+var handleLoadProblemClicked = require('./loadProblem');
 
 var arithmeticaArtifact = require('../build/contracts/Arithmetica.json');
 var arithmeticaContract = contract(arithmeticaArtifact);
 arithmeticaContract.setProvider(web3Provider);
-arithmeticaContract.deployed().then(
-    (arithmetica) => {return arithmetica.getEvaluation("Collatz");}
-).then(
-    (code) => {return buildCode(code);}
-).then(
-    (arbitraryCode) => {return eval(arbitraryCode);}
-).then(
-    (Problem) => {return new Problem();}
-).then(
-    (worker) => {worker.start();}
-);
 
 document.addEventListener("DOMContentLoaded", function() {
-    document.getElementById("createProblemButton").addEventListener("click", handleCreateProblemButtonClicked(arithmeticaContract));
+    document.getElementById("createProblemButton").addEventListener("click", handleCreateProblemClicked(arithmeticaContract));
+    document.getElementById("loadProblemButton").addEventListener("click", handleLoadProblemClicked(arithmeticaContract));
 }, false);
 

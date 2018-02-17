@@ -1,4 +1,4 @@
-module.exports = function handleCreateProblemButtonClicked(arithmeticaContract) {
+module.exports = function handleCreateProblemClicked(arithmeticaContract) {
     arithmeticaContract.deployed().then(
         (instance) => {
             var _name = document.getElementById("problemNameField");
