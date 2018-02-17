@@ -20,9 +20,11 @@ var setupEditor = require('./setupEditor');
 document.addEventListener("DOMContentLoaded", function() {
     evaluationEditor = setupEditor("evaluation-input");
     assertionEditor = setupEditor("assertion-input");
-    document.getElementById("submit-problem").addEventListener("click", () => {handleCreateProblemClicked(arithmeticaContract, evaluationEditor, assertionEditor)});
+    document.getElementById("submit-problem").addEventListener("click", () => {
+        handleCreateProblemClicked(arithmeticaContract, evaluationEditor, assertionEditor)}
+    );
     //document.getElementById("evaluation-input").addEventListener("click", handleLoadProblemClicked(arithmeticaContract));
-    //getProblems().then((v) => console.log(v));
+    getProblems().then((v) => console.log(v));
 }, false);
 
 function getProblems() {
