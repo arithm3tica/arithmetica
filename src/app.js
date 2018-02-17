@@ -13,8 +13,14 @@ var arithmeticaArtifact = require('../build/contracts/Arithmetica.json');
 var arithmeticaContract = contract(arithmeticaArtifact);
 arithmeticaContract.setProvider(web3Provider);
 
+var evaluationEditor;
+var assertionEditor;
+var setupEditor = require('./setupEditor');
+
 document.addEventListener("DOMContentLoaded", function() {
-    document.getElementById("submit-problem").addEventListener("click", handleCreateProblemClicked(arithmeticaContract));
+    evaluationEditor = setupEditor("evaluation-input");
+    assertionEditor = setupEditor("assertion-input");
+    document.getElementById("submit-problem").addEventListener("click", () => {handleCreateProblemClicked(arithmeticaContract, evaluationEditor, assertionEditor)});
     //document.getElementById("evaluation-input").addEventListener("click", handleLoadProblemClicked(arithmeticaContract));
     getProblems().then((v) => console.log(v));
 }, false);
