@@ -1,97 +1,236 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <title>Bootstrap Example</title>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-  <style>
-    /* Set height of the grid so .sidenav can be 100% (adjust as needed) */
-    .row.content {height: 750px}
-    
-    /* Set gray background color and 100% height */
-    .sidenav {
-      background-color: #f1f1f1;
-      height: 100%;
-    }
-        
-    /* On small screens, set height to 'auto' for the grid */
-    @media screen and (max-width: 767px) {
-      .row.content {height: auto;} 
-    }
-  </style>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Arithmetica</title>
+
+    <!-- Bootstrap core CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+    <style>
+    body {
+        overflow-x: hidden;
+        }
+
+        .hide {
+            display: none;
+        }
+
+        .display_content {
+            display: block;
+        }
+        #wrapper {
+          padding-left: 0;
+          -webkit-transition: all 0.5s ease;
+          -moz-transition: all 0.5s ease;
+          -o-transition: all 0.5s ease;
+          transition: all 0.5s ease;
+        }
+
+        #wrapper.toggled {
+          padding-left: 250px;
+        }
+
+        #sidebar-wrapper {
+          z-index: 1000;
+          position: fixed;
+          left: 250px;
+          width: 0;
+          height: 100%;
+          margin-left: -250px;
+          overflow-y: auto;
+          background: #000;
+          -webkit-transition: all 0.5s ease;
+          -moz-transition: all 0.5s ease;
+          -o-transition: all 0.5s ease;
+          transition: all 0.5s ease;
+        }
+
+        #wrapper.toggled #sidebar-wrapper {
+          width: 250px;
+        }
+
+        #page-content-wrapper {
+          width: 100%;
+          position: absolute;
+          padding: 15px;
+        }
+
+        #wrapper.toggled #page-content-wrapper {
+          position: absolute;
+          margin-right: -250px;
+        }
+
+
+        /* Sidebar Styles */
+
+        .sidebar-nav {
+          position: absolute;
+          top: 0;
+          width: 250px;
+          margin: 0;
+          padding: 0;
+          list-style: none;
+        }
+
+        .sidebar-nav li {
+          text-indent: 20px;
+          line-height: 40px;
+        }
+
+        .sidebar-nav li a {
+          display: block;
+          text-decoration: none;
+          color: #999999;
+        }
+
+        .sidebar-nav li a:hover {
+          text-decoration: none;
+          color: #fff;
+          background: rgba(255, 255, 255, 0.2);
+        }
+
+        .sidebar-nav li a:active, .sidebar-nav li a:focus {
+          text-decoration: none;
+        }
+
+        .sidebar-nav>.sidebar-brand {
+          height: 65px;
+          font-size: 30px;
+          color: #fff;
+          line-height: 60px;
+        }
+
+        .sidebar-nav>.sidebar-brand a {
+          color: #999999;
+        }
+
+        .sidebar-nav>.sidebar-brand a:hover {
+          color: #fff;
+          background: none;
+        }
+
+        @media(min-width:768px) {
+          #wrapper {
+            padding-left: 0;
+          }
+          #wrapper.toggled {
+            padding-left: 250px;
+          }
+          #sidebar-wrapper {
+            width: 0;
+          }
+          #wrapper.toggled #sidebar-wrapper {
+            width: 250px;
+          }
+          #page-content-wrapper {
+            padding: 20px;
+            position: relative;
+          }
+          #wrapper.toggled #page-content-wrapper {
+            position: relative;
+            margin-right: 0;
+          }
+          #assertion-input {
+            margin-top: 15px;
+          }
+          #evaluation-input {
+            margin-top: 15px;
+          }
+          #submit-problem{
+            margin-top: 15px;
+          }
+        }
+    </style>
+
 </head>
-<body> 
-<nav class="navbar navbar-inverse visible-xs">
-  <div class="container-fluid">
-    <div class="navbar-header">
-      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>                        
-      </button>
-      <a class="navbar-brand" href="#">Logo</a>
+
+<body>
+
+    <div id="wrapper" class="toggled">
+
+        <!-- Sidebar -->
+        <div id="sidebar-wrapper">
+            <ul class="sidebar-nav">
+                <li class="sidebar-brand">
+                    Arithmetica
+                </li>
+                <li>
+                    <a id="problemBtn" href="#problems">Problems</a>
+                </li>
+                <li>
+                    <a id="newProblemBtn" href="#newProblem">New Problem</a>
+                </li>
+            </ul>
+        </div>
+        <!-- /#sidebar-wrapper -->
+
+        <!-- Page Content -->
+        <div id="page-content-wrapper">
+            <div class="container-fluid">
+                <div id="problems" class="col-sm-9 ">
+                  <div class="well">
+                    <h4>Arithmetica</h4>
+                    <p>Some text..</p>
+                  </div>
+                </div>
+
+                <div id="newProblem" class="col-sm-9 hide " >
+                    <div class="form-group">
+                      <div class="input-group mb-3">
+                        <div class="input-group-prepend">
+                          <span class="input-group-text" id="basic-addon3">Problem Name</span>
+                        </div>
+                        <input id="problem-name" type="text" class="form-control" id="basic-url" aria-describedby="basic-addon3">
+                      </div>
+
+                      <div id="evaluation-input"></div>
+                      <div id="assertion-input"></div>
+                      <button id="submit-problem" type="button" class="btn btn-outline-secondary btn-lg btn-block">Submit Problem</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+
+        <!-- /#page-content-wrapper -->
+
     </div>
-    <div class="collapse navbar-collapse" id="myNavbar">
-      <ul class="nav navbar-nav">
-        <li class="active"><a href="#">Overview</a></li>
-        <li><a href="#">New Problem</a></li>
-        <li><a href="#">Dashboard</a></li>
-      </ul>
-    </div>
-  </div>
-</nav>
+    <!-- /#wrapper -->
 
-<div class="container-fluid">
-  <div class="row content">
-    <div class="col-sm-3 sidenav hidden-xs">
-      <h2>Logo</h2>
-      <ul class="nav nav-pills nav-stacked">
-        <li class="active"><a href="#Overview">Overview</a></li>
-        <li><a href="#NewProblem">New Problem</a></li>
-        <li><a href="#Dashboard">Dashboard</a></li>
-      </ul><br>
-    </div>
-    <br>
-    
-    <div id="#Overview" class="col-sm-9 hidden">
-      <div class="well">
-        <h4>Arithmetica</h4>
-        <p>Some text..</p>
-      </div>
-      <div class="row">
+    <script>
 
-      </div>
-    </div>
+    document.getElementById('problemBtn').onclick = function() {
+        var element = document.getElementById("problems");
+        element.classList.add("display_content");
+        element.classList.remove("hide");
+        element = document.getElementById("newProblem");
+        element.classList.remove("display_content");
+        element.classList.add("hide");
+    };
 
+    document.getElementById('newProblemBtn').onclick = function() {
+        var element = document.getElementById("newProblem");
+        element.classList.add("display_content");
+        element.classList.remove("hide");
+        element = document.getElementById("problems");
+        element.classList.remove("display_content");
+        element.classList.add("hide");
+    };
 
-    <div id = "#NewProblem" class="col-sm-9">
-      <div class="well">
-        <h4>New Problem</h4>
-        <p>Some text..</p>
-      </div>
-      <div class="row">
-
-      </div>
-    </div>
-
-
-    <div id = "#Dashboard" class="col-sm-9 hidden">
-      <div class="well">
-        <h4>Dashboard</h4>
-        <p>Some text..</p>
-      </div>
-      <div class="row">
-
-      </div>
-    </div>
-
-
-
-</div>
-<script src='js/app.js'></script>
+    </script>
+    <script src='app.js'></script>
+    <!-- Bootstrap core JavaScript -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
 
 </body>
+
 </html>
