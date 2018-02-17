@@ -14,18 +14,6 @@ arithmeticaContract.setProvider(web3Provider);
 arithmeticaContract.deployed().then(
     (instance) => {return instance;}
 ).then(
-    (arithmetica) => {return arithmetica.getEvaluation("Collatz");}
-).then(
-    (code) => {return buildCode(code);}
-).then(
-    (arbitraryCode) => {return eval(arbitraryCode);}
-).then(
-    (Problem) => {return new Problem();}
-).then(
-    (worker) => {worker.start();}
+    (arithmetica) => {return arithmetica.createProblem("Name","Evaluation","Assertions","Results Location");}
 );
-
-function buildCode(_code) {
-    return "class Problem extends Worker { constructor(){ super(\'OP2\'); }" + _code + "} module.exports = Problem;"
-}
 

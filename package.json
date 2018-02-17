@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "http-server -c-1 -p 12345 public",
-    "compile": "node_modules/.bin/browserify src/app.js -o public/js/app.js -d",
+    "compile": "node_modules/.bin/browserify src/loadProblem.js -o public/js/loadProblem.js -d",
     "dist": "./utils/combine_files.sh > ./dist/arithmetica.html",
     "build": "npm run compile && npm run dist"
   },
