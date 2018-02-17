@@ -14,8 +14,8 @@ var arithmeticaContract = contract(arithmeticaArtifact);
 arithmeticaContract.setProvider(web3Provider);
 
 document.addEventListener("DOMContentLoaded", function() {
-    //document.getElementById("createProblemButton").addEventListener("click", handleCreateProblemClicked(arithmeticaContract));
-    //document.getElementById("loadProblemButton").addEventListener("click", handleLoadProblemClicked(arithmeticaContract));
+    document.getElementById("submit-problem").addEventListener("click", handleCreateProblemClicked(arithmeticaContract));
+    //document.getElementById("evaluation-input").addEventListener("click", handleLoadProblemClicked(arithmeticaContract));
     getProblems().then((v) => console.log(v));
 }, false);
 
