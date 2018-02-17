@@ -8,4 +8,4 @@ while read p; do
 	else
 		echo $p
 	fi
-done < public/index.html
+done < public/arithmetica.html
