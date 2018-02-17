@@ -12,9 +12,6 @@ var arithmeticaArtifact = require('../build/contracts/Arithmetica.json');
 var arithmeticaContract = contract(arithmeticaArtifact);
 arithmeticaContract.setProvider(web3Provider);
 arithmeticaContract.deployed().then(
-    //Do Stuff Here?
-    (instance) => {return instance;}
-).then(
     (arithmetica) => {return arithmetica.getEvaluation("Collatz");}
 ).then(
     (code) => {return buildCode(code);}
