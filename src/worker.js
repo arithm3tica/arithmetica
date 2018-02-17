@@ -1,0 +1,242 @@
+'use strict'
+
+const IPFS = require('ipfs')
+const Room = require('ipfs-pubsub-room')
+var unique = require('array-unique');
+
+class Worker{
+
+  constructor(roomName='OPO'){
+
+    this._id = ''
+    this._leadPeer = ''
+    this._peers = []
+    this._state = 1
+    this._state_latch = 1
+    this._work = 0
+    this._pendingWork = []
+    this._completedWork = {}
+
+    this._ipfs = new IPFS({
+      //allows us to test using same browser instance, but different windows
+      repo: 'ipfs/arithmetica/' + Math.random(),
+      EXPERIMENTAL: {
+        pubsub: true
+      },
+      config: {
+        Addresses: {
+          Swarm: [
+            '/dns4/ws-star.discovery.libp2p.io/tcp/443/wss/p2p-websocket-star'
+          ]
+        }
+      }
+    })
+
+    //define pubsub room
+    this._room = Room(this._ipfs, roomName)
+
+    //register events 
+    this._room.on('peer joined', (peer) => this.onPeerJoined(peer))
+    this._room.on('peer left', (peer) => this.onPeerLeft(peer))
+    this._room.on('message', (message) => this.onMessage(message))
+
+  }
+
+  onPeerJoined(peer){
+    console.log('peer ' + peer + ' joined')
+    this._state_latch = -1
+    this.requestWork()
+  }
+
+  onPeerLeft(peer){
+    this._state_latch = -1
+    console.log('peer ' + peer + ' left')
+  }
+
+  onMessage(message){
+    var messageData = this.parseMessage(message.data.toString())
+    if(messageData.command === 'REQUEST_WORK'){
+      console.log("Sending Work: " + messageData.work)
+      this.sendWork(message.from,this._work)
+      this._work += 1
+    }
+    else if(messageData.command === 'SEND_WORK'){
+      if(this.updateWork(messageData)){
+        this._state_latch = 1
+        console.log("Received Work: " + messageData.work)
+      }
+      else{
+        console.log("Lead Peer is behind.  Sending the latest state.")
+        this.sendWork(message.from,this._work)
+      }
+    }
+    else if(messageData.command === 'SUBMIT_WORK'){
+      this._completedWork[parseInt(messageData.work)]=0
+      //if(this._work % 300 == 0){
+      //   unique(this._completedWork)
+      //   this._completedWork.sort((a,b)=>a-b)
+      //   console.log(this._completedWork)
+      //}
+    }
+  }
+
+  start(){
+    this._ipfs.once('ready', () => this._ipfs.id((err, info) => {
+      if (err) { throw err }
+      this._id = info.id
+      this._leadPeer = info.id
+      console.log('IPFS node ready with address ' + info.id)
+
+      this.workLoop()
+    }))
+  }
+
+  workLoop(){
+    setInterval(() => {
+
+      this._peers = this._room.getPeers()
+      
+      if(this._state == -1){
+        this.selectLeadPeer()
+      } 
+      else if( this._state == 0){
+        this.requestWork()
+      } 
+      else if(this._state == 1) {
+        this.doWork()
+      }
+
+      this.updateState()
+
+    }, 100)
+  }
+
+  evaluation(inputs){
+    var number = inputs[0]
+    var iterations = inputs[1]
+    var flag = inputs[2]
+    number += 1
+    console.log(inputs[0].toString() + " + 1 = " + number.toString())
+    flag = false
+    return [number,iterations,flag]
+  }
+
+  /*evaluation(inputs){
+    var number = inputs[0]
+    var iterations = inputs[1]
+    var flag = inputs[2]
+    if(number % 2 == 0){
+      number /= 2
+    }
+    else{
+      number = 3 * number + 1
+    }
+    if(this._completedWork[number]){
+     iterations += this._completedWork[number]
+     flag = false
+    }
+    return [number,iterations,flag]
+  }*/
+
+  calc(){
+    var flag = true;
+    var iterations;
+    var input = this._pendingWork.pop()
+    var input_save = input
+    console.log("Work: " + input_save.toString())
+    for(iterations = 0; input > 1 && flag == true; iterations++){
+      [input,iterations,flag] = this.evaluation([input,iterations,flag])
+    }
+
+    if (input == 0){
+      console.log("**Solution already found for Work: " + input_save.toString() + "Iterations: " + this._completedWork[input])
+    }
+    console.log("**Work: " + input_save.toString() + " Current: " + input.toString() + " Iteration: " + iterations.toString())
+    return iterations
+  }
+
+  selectLeadPeer(){
+    if(this._peers.length > 0)
+    {
+      var peers = this._peers
+      peers.push(this._id)
+      peers.sort()
+      this._leadPeer = peers[0]
+      console.log("Lead peer is: " + this._leadPeer)
+    }
+  }
+
+  requestWork(){
+    var message = this.constructMessage('REQUEST_WORK','')
+    this._room.sendTo(this._leadPeer,message)
+  }
+
+  doWork(){
+    this._pendingWork.push(this._work)
+    if(this._peers.length == 0){
+      this._completedWork[this._work]=this.calc()
+      this._work+=1
+    }
+    else{
+      while(this._pendingWork.length > 0){
+        var result = this.calc()
+        this._work+=1
+        this.submitWork(this._work,result)
+      }
+    }
+  }
+
+  updateState(){
+    if(this._state != this._state_latch){
+      this._state = this._state_latch
+    } 
+    else
+    {
+      this._state = 0
+      if(this._peers.length == 0) this._leadPeer = this._id
+      if(this._leadPeer == this._id) this._state = 1
+      this._state_latch = this._state
+    }
+  }
+
+  sendWork(peer,work){
+    var message = this.constructMessage('SEND_WORK',work)
+    this._room.sendTo(peer,message)
+  }
+
+  submitWork(work){
+    var message = this.constructMessage('SUBMIT_WORK',work)
+    this._room.broadcast(message)
+  }
+
+  updateWork(message){
+    var result = false
+    var temp = parseInt(message.work) 
+    if(temp >= this._work){
+      if(this._state == 1){
+        if(this._id === this._leadPeer){
+          this._pendingWork = []
+          this._work = temp
+        }
+        this._pendingWork.push(temp)
+        unique(this._pendingWork)
+      }
+      else{
+        this._work = temp
+      }
+      result = true
+    }
+    return result
+  }
+
+  parseMessage(message){
+    return JSON.parse(message)
+  }
+
+  constructMessage(command, work, result){
+    var message = {'command':command,'work':work,'result':result}
+    return JSON.stringify(message)
+  }
+}
+
+module.exports = Worker;
