@@ -15,6 +15,7 @@ contract Arithmetica {
         string resultsLocation;
     }
     mapping(string => MathTemplate) mathProblems;
+    string[] problems;
 
     //////////////////////////////////////////////////////////////////////////////////
     function createProblem(string name, string evaluation, string assertions, string resultsLocation) public {
@@ -25,6 +26,8 @@ contract Arithmetica {
 
         mathProblems[name].checksum = sha256(evaluation, assertions);
         mathProblems[name].resultsLocation = resultsLocation;
+
+        problems.push(name);
     }
 
     function updateProblem(string name, string evaluation, string assertions, string resultsLocation) public {
@@ -43,6 +46,19 @@ contract Arithmetica {
 
         mathProblems[name] = MathTemplate(0x0,"","",0x0,"");
     }
+
+    //////////////////////////////////////////////////////////////////////////////////
+
+    function getProblemCount() public constant returns (uint) {
+        return problems.length;
+    }
+
+    function getProblemName(uint index) public constant returns (string) {
+        require(index >= 0);
+        require(index < problems.length);
+        return problems[index];
+    }
+
     //////////////////////////////////////////////////////////////////////////////////
 
     function getOwner(string name) public view returns (address) {

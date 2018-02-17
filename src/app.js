@@ -14,7 +14,25 @@ var arithmeticaContract = contract(arithmeticaArtifact);
 arithmeticaContract.setProvider(web3Provider);
 
 document.addEventListener("DOMContentLoaded", function() {
-    document.getElementById("createProblemButton").addEventListener("click", handleCreateProblemClicked(arithmeticaContract));
-    document.getElementById("loadProblemButton").addEventListener("click", handleLoadProblemClicked(arithmeticaContract));
+    //document.getElementById("createProblemButton").addEventListener("click", handleCreateProblemClicked(arithmeticaContract));
+    //document.getElementById("loadProblemButton").addEventListener("click", handleLoadProblemClicked(arithmeticaContract));
+    getProblems().then((v) => console.log(v));
 }, false);
+
+function getProblems() {
+    var instance;
+    return Promise.resolve(
+        arithmeticaContract.deployed().then(
+            (_instance) => {instance = _instance; return _instance.getProblemCount();}
+        ).then(
+            (count) => {
+                var problems = [];
+                for(var i = 0; i < count; ++i) {
+                    instance.getProblemName(i).then((result)=>{problems.push(result);});
+                }
+                return problems;
+            }
+        )
+    );
+}
 
