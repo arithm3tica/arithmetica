@@ -26,6 +26,9 @@ var evaluationEditor;
 var assertionEditor;
 var setupEditor = require('./setupEditor');
 
+var contributeDDItems = [];
+var currentProblem = "";
+
 document.addEventListener("DOMContentLoaded", function() {
     if($("#submit-problem-ui").is(":visible")) {
         $("#add-problem-button").hide()
@@ -35,20 +38,53 @@ document.addEventListener("DOMContentLoaded", function() {
     document.getElementById("submit-problem").addEventListener("click", () => {
         handleCreateProblemClicked(arithmeticaContract, evaluationEditor, assertionEditor)}
     );
+    document.getElementById("add-problem-button").addEventListener("click", () => {
+        switchToAdd();}
+    );
     //TODO: Renable this once dashboard is created.
     document.getElementById("load-problem").addEventListener("click", () => {
         handleLoadProblemClicked(arithmeticaContract,workerEvent)}
     );
     getProblems().then((problemsList) => {
-        $("#problem-dropdown-menu").html(buildProblemDropdown(problemsList));}
+        $("#problem-dropdown-menu").html(buildProblemDropdown(problemsList));
+        contributeDDItems = buildDDItemList();
+        for(let item of contributeDDItems) {
+            item.addEventListener("click", () => {
+                switchToContribute(); 
+                currentProblem = item.innerText;
+            });
+        }}
     );
 
 }, false);
 
+function switchToContribute() {
+    $("#submit-problem-ui").hide();
+    $("#add-problem-button").show();
+    $("#contribute-problem-ui").show();
+}
+
+function switchToAdd() {
+    $("#submit-problem-ui").show();
+    $("#add-problem-button").hide();
+    $("#contribute-problem-ui").hide();
+    currentProblem = "";
+}
+
+function buildDDItemList() {
+    let tempList = [];
+    for(let entry of contributeDDItems) {        
+        tempList.push(document.getElementById(entry));
+    }
+    return tempList;
+}
+
 function buildProblemDropdown(problemsList) {
     let innerHTML = "";
+    let counter = 1;
     for(let problem of problemsList) {
-        innerHTML = innerHTML + "<a class=\"dropdown-item\" href=\"#\">" + problem + "</a>";
+        innerHTML = innerHTML + "<a id=\"contribute-dd-item" + counter + "\" class=\"dropdown-item\" href=\"#\">" + problem + "</a>";
+        contributeDDItems.push("contribute-dd-item" + counter);
     }
     return innerHTML;
 }

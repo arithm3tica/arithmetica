@@ -30,8 +30,8 @@
       #assertion-input-container {
         margin-top: 37px;
       }
-      #evaluation-input-container {
-        margin-top: 37px;
+      #problem-name-container {
+        margin-bottom: 37px !important;
       }
       #submit-problem{
         margin-top: 37px;
@@ -140,6 +140,13 @@
         text-decoration: none;
         background-color: #000000;
       }
+      .scroll-table {
+        border: black solid 1px !important;
+        border-left: solid 0px !important;
+        border-right: solid 0px !important;
+        height: 238px;
+        overflow: scroll;
+      }
 
     </style>
   </head>
@@ -192,7 +199,70 @@
       </div>
     </div>
 
-    <div id="contribute-problem-ui" style="visibility: hidden;"class="form-group">
+    <div id="contribute-problem-ui" class="form-group">
+        <div class="input-group-prepend">
+          <span id="evaluation-label" class="input-group-text" id="basic-addon3">Peers</span>
+        </div>
+
+        <div class="scroll-table">
+          <table class="table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>First Name</th>
+              <th>Last Name</th>
+              <th>Username</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">1</th>
+              <td>Mark</td>
+              <td>Otto</td>
+              <td>@mdo</td>
+            </tr>
+            <tr>
+              <th scope="row">2</th>
+              <td>Jacob</td>
+              <td>Thornton</td>
+              <td>@fat</td>
+            </tr>
+            <tr>
+              <th scope="row">3</th>
+              <td>Larry</td>
+              <td>the Bird</td>
+              <td>@twitter</td>
+            </tr>
+            <tr>
+              <th scope="row">3</th>
+              <td>Larry</td>
+              <td>the Bird</td>
+              <td>@twitter</td>
+            </tr>
+            <tr>
+              <th scope="row">2</th>
+              <td>Jacob</td>
+              <td>Thornton</td>
+              <td>@fat</td>
+            </tr>
+            <tr>
+              <th scope="row">3</th>
+              <td>Larry</td>
+              <td>the Bird</td>
+              <td>@twitter</td>
+            </tr>
+            <tr>
+              <th scope="row">3</th>
+              <td>Larry</td>
+              <td>the Bird</td>
+              <td>@twitter</td>
+            </tr>
+          </tbody>
+        </table>
+        </div>
+
+        <div class=”ct-chart”></div>
+      </div>
     </div>
 
   </body>
