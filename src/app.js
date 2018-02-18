@@ -14,6 +14,8 @@ else
     window.web3 = Web3
 }
 
+//participant-table-body
+
 const Worker = require('./worker');
 var handleCreateProblemClicked = require('./newProblem');
 var handleLoadProblemClicked = require('./loadProblem');
@@ -28,6 +30,8 @@ var setupEditor = require('./setupEditor');
 
 var contributeDDItems = [];
 var currentProblem = "";
+
+var participantTable = [];
 
 document.addEventListener("DOMContentLoaded", function() {
     if($("#submit-problem-ui").is(":visible")) {
@@ -55,6 +59,40 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 
 }, false);
+
+function addTableObject(workerId, count) {
+    participantTable.push({"id": workerId, "count": count}); 
+    rebuildTbody();
+}
+
+function updateTableObject(workerId, count) {
+    var index = participantTable.findIndex((element) => {
+        return element.id == workerId;
+    });
+    participantTable[index] = {"id": workerId, "count": count};
+    rebuildTbody();
+}
+
+function deleteTableObject(workerId, count) {
+    var index = participantTable.findIndex((element) => {
+        return element.id == workerId;
+    });
+    participantTable = participantTable.splice(index,1);
+    rebuildTbody();
+}
+
+function rebuildTbody() {
+    $("#participant-table-body").html(generateTbodyString());
+}
+
+function generateTbodyString() {
+    let innerHTML = "";
+    let counter = 1;
+    for(let party of participantTable) {
+        innerHTML = innerHTML + "<tr> <th scope=\"row\">" + counter + "</th><td>" + party.id + "</td><td>" + party.count + "</td></tr>";
+    }
+    return innerHTML;
+}
 
 function switchToContribute() {
     $("#submit-problem-ui").hide();
