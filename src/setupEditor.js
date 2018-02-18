@@ -9,10 +9,20 @@ module.exports = function setupEditor(name) {
         editor.setOption("maxLines", 15);
         editor.setOption("minLines", 15);
         editor.setOption("highlightActiveLine", false);
-        editor.insert('function foo(items) {\n'+
-        '\tvar x = "All this is syntax highlighted";\n'+
-        '\treturn x;\n'+
-        '}');
+        if(name === "evaluation-input") {
+            editor.insert('evaluation(input) {\n'+
+            '\tinput += 1;\n'+
+            '\treturn input;\n'+
+            '}');
+        } else if(name === "assertion-input") {
+            editor.insert('assertions(original, number, iterations) {\n'+
+            '\tif(iterations > 10) return true;\n'+
+            '}');
+        } else {
+            editor.insert('function foo() {\n'+
+            '\treturn bar;\n'+
+            '}');
+        }
         return editor;
 }
 
