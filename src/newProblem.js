@@ -4,7 +4,7 @@ module.exports = function handleCreateProblemClicked(arithmeticaContract, evalua
             var _name = document.getElementById("problem-name").value;
             var _evaluation = evaluationEditor.getValue();
             var _assertions = assertionEditor.getValue();
-            instance.createProblem(_name, _evaluation, _assertions, "", {from: web3.eth.defaultAccount});
+            instance.createProblem(_name, _evaluation, _assertions, "", {from: window.web3.eth.defaultAccount});
         }
     );
 }
