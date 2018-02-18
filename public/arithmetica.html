@@ -241,6 +241,7 @@
             series: [[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]]
         };
         var chart = new Chartist.Line('.ct-chart', chartData, options);
+
         function workerEvent(eventName, data){
           if(eventName == 'CompletedWork'){
               if(_submissions.hasOwnProperty(data.peer)){
@@ -260,6 +261,7 @@
           console.log(data);
         }
 
+
         setInterval(() => {
         var idCounter = 0;
         for(id in _submissions){
@@ -267,7 +269,7 @@
                 var index = chartData.series.indexOf(id);
                 chartData.series.splice(index, 1);
             }
-            else{      
+            else if(_submissions.hasOwnProperty(id)){      
                 var dataInInterval = _submissions[id];
                 _submissions[id] = 0;
                 counter+=1;
