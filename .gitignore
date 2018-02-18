@@ -39,6 +39,5 @@ Thumbs.db
 # Other
 ######################
 node_modules/
-build/
 public/js
 dist/
