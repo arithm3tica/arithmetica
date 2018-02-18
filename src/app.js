@@ -4,14 +4,16 @@ var Web3 = require('web3');
 var contract = require('truffle-contract');
 if (typeof web3 !== 'undefined') {
   // This user has MetaMask, or another Web3 browser installed!
-    console.log("MetaMask")
-    web3Provider = web3.currentProvider
+    console.log("MetaMask");
+    web3Provider = web3.currentProvider;
+    window.web3 = web3;
 }
 else
 {
     web3Provider = new Web3.providers.HttpProvider('http://localhost:9545');
+    window.web3 = Web3
 }
-window.web3 = web3Provider;
+
 const Worker = require('./worker');
 var handleCreateProblemClicked = require('./newProblem');
 var handleLoadProblemClicked = require('./loadProblem');
