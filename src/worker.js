@@ -1,10 +1,11 @@
 'use strict'
 
+const EventEmitter = require('events');
 const IPFS = require('ipfs')
 const Room = require('ipfs-pubsub-room')
 var unique = require('array-unique');
 
-class Worker{
+class Worker extends EventEmitter{
 
   constructor(roomName='OPO'){
 
@@ -46,11 +47,13 @@ class Worker{
     console.log('peer ' + peer + ' joined')
     this._state_latch = -1
     this.requestWork()
+    this.emit('PeerJoined', {'peer':peer});
   }
 
   onPeerLeft(peer){
     this._state_latch = -1
     console.log('peer ' + peer + ' left')
+    this.emit('PeerLeft', {'peer':peer});
   }
 
   onMessage(message){
@@ -72,11 +75,7 @@ class Worker{
     }
     else if(messageData.command === 'SUBMIT_WORK'){
       this._completedWork[parseInt(messageData.work)]=0
-      //if(this._work % 300 == 0){
-      //   unique(this._completedWork)
-      //   this._completedWork.sort((a,b)=>a-b)
-      //   console.log(this._completedWork)
-      //}
+      this.emit('CompletedWork', {'peer':message.from,'work':parseInt(messageData.work),'iterations':parseInt(messageData.result)});
     }
   }
 
@@ -190,12 +189,12 @@ class Worker{
   }
 
   sendWork(peer,work){
-    var message = this.constructMessage('SEND_WORK',work)
+    var message = this.constructMessage('SEND_WORK',work,0)
     this._room.sendTo(peer,message)
   }
 
-  submitWork(work){
-    var message = this.constructMessage('SUBMIT_WORK',work)
+  submitWork(work,result){
+    var message = this.constructMessage('SUBMIT_WORK',work,result)
     this._room.broadcast(message)
   }
 

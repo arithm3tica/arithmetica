@@ -1,6 +1,6 @@
 const Worker = require('./worker');
 
-module.exports = function handleLoadProblemClicked(arithmeticaContract) {
+module.exports = function handleLoadProblemClicked(arithmeticaContract,callback) {
     var instance;
     var code = "";
 
@@ -15,11 +15,29 @@ module.exports = function handleLoadProblemClicked(arithmeticaContract) {
     ).then(
         (Problem) => {return new Problem();}
     ).then(
-        (worker) => {worker.start();}
+        (worker) => {
+            worker.on('PeerJoined',(data) => {
+                callback(data);
+            });
+            worker.on('PeerLeft',(data) => {
+                callback(data);
+            });
+            worker.on('CompletedWork',(data) => {
+                callback(data);
+            });
+            worker.start();
+
+
+        }
     );
 }
 
 function buildCode(_code) {
     return "class Problem extends Worker { constructor(){ super(\'OP2\'); }" + _code + "} module.exports = Problem;"
 }
+
+libInstance.on('data', (data) => {
+    // Outputs : Received data: "Hello World, data test"
+    console.log(`Received data: "${data}"`);
+});
 

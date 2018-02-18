@@ -33,9 +33,9 @@ document.addEventListener("DOMContentLoaded", function() {
         handleCreateProblemClicked(arithmeticaContract, evaluationEditor, assertionEditor)}
     );
     //TODO: Renable this once dashboard is created.
-    /*document.getElementById("load-problem").addEventListener("click", () => {
-        handleLoadProblemClicked(arithmeticaContract, evaluationEditor, assertionEditor)}
-    );*/
+    document.getElementById("load-problem").addEventListener("click", () => {
+        handleLoadProblemClicked(arithmeticaContract,workerEvent)}
+    );
     getProblems().then((v) => console.log(v));
 }, false);
 
@@ -54,5 +54,9 @@ function getProblems() {
             }
         )
     );
+}
+
+function workerEvent(data){
+    console.log(data);
 }
 
