@@ -6,7 +6,7 @@
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <title>New Problem | Arithmetica</title>
+    <title>Arithmetica</title>
 
     <!-- Bootstrap core CSS -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
@@ -220,6 +220,7 @@
         <script type="text/javascript">
 
         var _submissions = {};
+        var _totalSubmissions = 0;
 
         var counter = 0;
 
@@ -247,42 +248,29 @@
                 addTableObject(data.peer, 0);
 
               }
+              _totalSubmissions += 1
               updateTableObject(data.peer, data.work);
           }
           else if (eventName == 'PeerJoined'){
               _submissions[data.peer]=0;
               addTableObject(data.peer, 0);
-              chartData.series.push([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]) 
           }
           else if (eventName == 'PeerLeft'){
               deleteTableObject(data.peer);
               _submissions[data.peer]=-1;
           }
-          console.log(data);
+
         }
 
 
         setInterval(() => {
-        var idCounter = 0;
-        for(id in _submissions){
-            if(_submissions[id]==-1){
-                var index = chartData.series.indexOf(id);
-                chartData.series.splice(index, 1);
-            }
-            else if(_submissions.hasOwnProperty(id)){      
-                var dataInInterval = _submissions[id];
-                _submissions[id] = 0;
-                counter+=1;
+          counter+=1;
 
-                chartData.labels[0].shift(counter);
-
-                chartData.series[idCounter].shift()
-                chartData.series[idCounter].push(dataInInterval);
-                chart.update(chartData,options);
-                idCounter += 1;
-            }
-        }
-
+          chartData.labels[0].shift(counter);
+          chartData.series[0].shift()
+          chartData.series[0].push(_totalSubmissions);
+          _totalSubmissions = 0
+          chart.update(chartData,options);
       }, 500)
 
       var participantTable = [];
