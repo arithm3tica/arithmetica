@@ -7,7 +7,7 @@ module.exports = function handleLoadProblemClicked(arithmeticaContract) {
     arithmeticaContract.deployed().then(
         (_instance) => {instance = _instance; return _instance.getEvaluation("Collatz Conjecture");}
     ).then(
-        (_code) => {code += _code; return instance.getAssertions("Collatz Conjectore");}
+        (_code) => {code += _code; return instance.getAssertions("Collatz Conjecture");}
     ).then(
         (_code) => {code += _code; return buildCode(code);}
     ).then(
