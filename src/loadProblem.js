@@ -35,9 +35,3 @@ module.exports = function handleLoadProblemClicked(arithmeticaContract,callback)
 function buildCode(_code) {
     return "class Problem extends Worker { constructor(){ super(\'OP2\'); }" + _code + "} module.exports = Problem;"
 }
-
-libInstance.on('data', (data) => {
-    // Outputs : Received data: "Hello World, data test"
-    console.log(`Received data: "${data}"`);
-});
-
