@@ -106,7 +106,35 @@ function getProblems() {
     );
 }
 
-function workerEvent(data){
+
+
+
+
+
+
+function workerEvent(event, data){
+    if(event == 'CompletedWork'){
+        if(_submissions[data.id]){
+            _submissions[data.id]+=1;
+        }
+    }
+    else if (event == 'PeerJoined'){
+        _submissions[data.id]=0;  
+        chartData.series.push([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]) 
+    }
+    else if (event == 'PeerLeft'){
+        delete _submissions[data.id];
+        chartData.series.push([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]) 
+    }
     console.log(data);
+
 }
+
+
+
+
+
+
+
+
 

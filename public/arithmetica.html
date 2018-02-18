@@ -14,6 +14,8 @@
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/chartist.js/latest/chartist.min.css">
+    <script src="//cdn.jsdelivr.net/chartist.js/latest/chartist.min.js"></script>
     <script src='src/app.js'></script>
 
     <style type="text/css">
@@ -209,9 +211,9 @@
           <thead>
             <tr>
               <th>#</th>
-              <th>First Name</th>
-              <th>Last Name</th>
-              <th>Username</th>
+              <th>ID</th>
+              <th>Role</th>
+              <th>Submissions</th>
             </tr>
           </thead>
           <tbody>
@@ -221,47 +223,54 @@
               <td>Otto</td>
               <td>@mdo</td>
             </tr>
-            <tr>
-              <th scope="row">2</th>
-              <td>Jacob</td>
-              <td>Thornton</td>
-              <td>@fat</td>
-            </tr>
-            <tr>
-              <th scope="row">3</th>
-              <td>Larry</td>
-              <td>the Bird</td>
-              <td>@twitter</td>
-            </tr>
-            <tr>
-              <th scope="row">3</th>
-              <td>Larry</td>
-              <td>the Bird</td>
-              <td>@twitter</td>
-            </tr>
-            <tr>
-              <th scope="row">2</th>
-              <td>Jacob</td>
-              <td>Thornton</td>
-              <td>@fat</td>
-            </tr>
-            <tr>
-              <th scope="row">3</th>
-              <td>Larry</td>
-              <td>the Bird</td>
-              <td>@twitter</td>
-            </tr>
-            <tr>
-              <th scope="row">3</th>
-              <td>Larry</td>
-              <td>the Bird</td>
-              <td>@twitter</td>
-            </tr>
           </tbody>
         </table>
         </div>
+        <div class="ct-chart ct-perfect-fourth"></div>
+        <script type="text/javascript">
 
-        <div class=”ct-chart”></div>
+        var _submissions = {};
+
+        var counter = 0;
+
+        var options = {
+        height: 500,
+        fullWidth: true,
+        lineSmooth: false
+        };
+
+        var chartData = {
+            // A labels array that can contain any sort of values
+            labels: [[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]],
+            // Our series array that contains series objects or in this case series data arrays
+            series: [[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]]
+        };
+        var chart = new Chartist.Line('.ct-chart', chartData, options);
+
+        setInterval(() => {
+        var idCounter = 0;
+        for(id in _submissions){
+            if(!_submissions[data.id]){
+                var index = chartData.series.indexOf(id);
+                chartData.series.splice(index, 1);
+            }
+            else{      
+                var dataInInterval = _submissions[id];
+                _submissions[id] = 0;
+                counter+=1;
+
+                chartData.labels[0].shift(counter);
+
+                chartData.series[idCounter].shift()
+                chartData.series[idCounter].push(dataInInterval);
+                chart.update(chartData,options);
+                idCounter += 1;
+            }
+        }
+
+      }, 100)
+
+        </script>
       </div>
     </div>
 

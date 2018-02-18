@@ -17,13 +17,13 @@ module.exports = function handleLoadProblemClicked(arithmeticaContract,callback)
     ).then(
         (worker) => {
             worker.on('PeerJoined',(data) => {
-                callback(data);
+                callback('PeerJoined',data);
             });
             worker.on('PeerLeft',(data) => {
-                callback(data);
+                callback('PeerLeft',data);
             });
             worker.on('CompletedWork',(data) => {
-                callback(data);
+                callback('CompletedWork',data);
             });
             worker.start();
 
