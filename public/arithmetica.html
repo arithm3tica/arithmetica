@@ -241,7 +241,7 @@
             series: [[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]]
         };
         var chart = new Chartist.Line('.ct-chart', chartData, options);
-
+  
         function workerEvent(eventName, data){
           if(eventName == 'CompletedWork'){
               if(_submissions.hasOwnProperty(data.peer)){
@@ -249,6 +249,8 @@
               }
               else{
                 _submissions[data.peer]=0;
+                addTableObject(data.peer, 0);
+
               }
               updateTableObject(data.peer, data.work);
           }
@@ -289,6 +291,8 @@
       }, 500)
 
       var participantTable = [];
+
+
       function addTableObject(workerId, count) {
           participantTable.push({"id": workerId, "count": count});
           rebuildTbody();
