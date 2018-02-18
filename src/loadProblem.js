@@ -2,14 +2,14 @@ const Worker = require('./worker');
 
 module.exports = function handleLoadProblemClicked(arithmeticaContract) {
     var instance;
-    var code;
+    var code = "";
 
     arithmeticaContract.deployed().then(
         (_instance) => {instance = _instance; return _instance.getEvaluation("Collatz Conjecture");}
     ).then(
-        (_code) => {code += _code; return instance.getAssertions("Collatz Conjecture");}
+        (_code) => {code = code + _code; return instance.getAssertions("Collatz Conjecture");}
     ).then(
-        (_code) => {code += _code; return buildCode(code);}
+        (_code) => {code = code + " " + _code; return buildCode(code);}
     ).then(
         (arbitraryCode) => {return eval(arbitraryCode)}
     ).then(

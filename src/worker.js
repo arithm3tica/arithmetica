@@ -122,11 +122,11 @@ class Worker{
     var original = input
     console.log("Work: " + original.toString())
     for(iterations = 0; input > 1 && flag == true; iterations++){
-      [input,iterations,flag] = this.evaluation([input,iterations,flag])
-      if(assertions(original, input, iterations)) {
-        store(original, input, iterations, true);
+      [input,iterations,flag] = this.evaluation([input,iterations,flag]);
+      if(this.assertions(original, input, iterations)) {
+        this.store(original, input, iterations, true);
       } else {
-        store(original, input, iterations, false);
+        this.store(original, input, iterations, false);
       }
     }
     if (!flag){
@@ -137,7 +137,10 @@ class Worker{
   }
 
   store(original, input, iterations, flagged){
-   //Call Storj
+    //Call Storj
+    if(flagged) {
+        console.log("***FLAGGED***: Number: " + original + " Chain Height: " + iterations);
+    }
   }
 
   selectLeadPeer(){
