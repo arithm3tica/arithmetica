@@ -249,12 +249,15 @@
               else{
                 _submissions[data.peer]=0;
               }
+              updateTableObject(data.peer, data.work);
           }
           else if (eventName == 'PeerJoined'){
-              _submissions[data.peer]=0;  
+              _submissions[data.peer]=0;
+              addTableObject(data.peer, 0);
               chartData.series.push([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]) 
           }
           else if (eventName == 'PeerLeft'){
+              deleteTableObject(data.peer);
               _submissions[data.peer]=-1;
           }
           console.log(data);
@@ -283,10 +286,46 @@
 
       }, 500)
 
-        </script>
-      </div>
-    </div>
+      var participantTable = [];
+      function addTableObject(workerId, count) {
+          participantTable.push({"id": workerId, "count": count});
+          rebuildTbody();
+      }
 
-  </body>
-</html>
+      function updateTableObject(workerId, count) {
+          var index = participantTable.findIndex((element) => {
+              return element.id == workerId;
+          });
+          participantTable[index] = {"id": workerId, "count": count};
+          rebuildTbody();
+      }
+
+      function deleteTableObject(workerId) {
+          var index = participantTable.findIndex((element) => {
+              return element.id == workerId;
+          });
+          participantTable = participantTable.splice(index,1);
+          rebuildTbody();
+      }
+
+      function rebuildTbody() {
+          $("#participant-table-body").html(generateTbodyString());
+      }
+
+      function generateTbodyString() {
+          let innerHTML = "";
+          let counter = 1;
+          for(let party of participantTable) {
+              innerHTML = innerHTML + "<tr> <th scope=\\\"row\\\">" + counter + "</th><td>" + party.id + "</td><td>" + party.count + "</td></tr>";
+              counter++;
+          }
+          return innerHTML;
+      }
+
+                </script>
+              </div>
+            </div>
+
+          </body>
+        </html>
 
