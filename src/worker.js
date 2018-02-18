@@ -8,6 +8,7 @@ var unique = require('array-unique');
 class Worker extends EventEmitter{
 
   constructor(roomName='OPO'){
+    super();
 
     this._id = ''
     this._leadPeer = ''
