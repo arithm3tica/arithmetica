@@ -1,15 +1,15 @@
 const Worker = require('./worker');
 
-module.exports = function handleLoadProblemClicked(arithmeticaContract,callback) {
+module.exports = function handleLoadProblemClicked(arithmeticaContract,problemName,callback) {
     var instance;
     var code = "";
 
     arithmeticaContract.deployed().then(
-        (_instance) => {instance = _instance; return _instance.getEvaluation("Collatz Conjecture");}
+        (_instance) => {instance = _instance; return _instance.getEvaluation(problemName);}
     ).then(
-        (_code) => {code = code + _code; return instance.getAssertions("Collatz Conjecture");}
+        (_code) => {code = code + _code; return instance.getAssertions(problemName);}
     ).then(
-        (_code) => {code = code + " " + _code; return buildCode(code);}
+        (_code) => {code = code + " " + _code; return buildCode(code,problemName);}
     ).then(
         (arbitraryCode) => {return eval(arbitraryCode)}
     ).then(
@@ -32,6 +32,6 @@ module.exports = function handleLoadProblemClicked(arithmeticaContract,callback)
     );
 }
 
-function buildCode(_code) {
-    return "class Problem extends Worker { constructor(){ super(\'OP2\'); }" + _code + "} module.exports = Problem;"
+function buildCode(_code, problemName) {
+    return "class Problem extends Worker { constructor(){ super(\'" + problemName + "\'); }" + _code + "} module.exports = Problem;"
 }

@@ -42,16 +42,13 @@ document.addEventListener("DOMContentLoaded", function() {
     document.getElementById("add-problem-button").addEventListener("click", () => {
         switchToAdd();}
     );
-    //TODO: Renable this once dashboard is created.
-    document.getElementById("load-problem").addEventListener("click", () => {
-        handleLoadProblemClicked(arithmeticaContract,workerEvent)}
-    );
     getProblems().then((problemsList) => {
         $("#problem-dropdown-menu").html(buildProblemDropdown(problemsList));
         contributeDDItems = buildDDItemList();
         for(let item of contributeDDItems) {
            item.addEventListener("click", () => {
               currentProblem = item.innerText;
+              handleLoadProblemClicked(arithmeticaContract,currentProblem,workerEvent)
               switchToContribute(); 
             });
         }
