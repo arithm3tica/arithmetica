@@ -24,7 +24,8 @@
     "ipfs": "^0.27.7",
     "ipfs-pubsub-room": "^1.1.5",
     "truffle-contract": "^3.0.1",
-    "web3": "^0.20.5",
-    "uglify-js": "^3.3.11"
+    "truffle-hdwallet-provider": "0.0.3",
+    "uglify-js": "^3.3.11",
+    "web3": "^0.20.5"
   }
 }

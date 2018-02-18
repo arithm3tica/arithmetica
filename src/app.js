@@ -2,7 +2,16 @@
 
 var Web3 = require('web3');
 var contract = require('truffle-contract');
-var web3Provider = new Web3.providers.HttpProvider('http://localhost:9545');
+var web3Provider;
+if (typeof window.Web3 !== 'undefined') {
+  // This user has MetaMask, or another Web3 browser installed!
+    console.log("MetaMask")
+    web3Provider = window.Web3.currentProvider  
+}
+else
+{
+    web3Provider = new Web3.providers.HttpProvider('http://localhost:9545');
+}
 var web3 = new Web3(web3Provider);
 
 const Worker = require('./worker');
