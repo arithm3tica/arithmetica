@@ -45,7 +45,7 @@ class Worker extends EventEmitter{
   }
 
   onPeerJoined(peer){
-    console.log('peer ' + peer + ' joined')
+    //console.log('peer ' + peer + ' joined')
     this._state_latch = -1
     this.requestWork()
     this.emit('PeerJoined', {'peer':peer});
@@ -53,24 +53,24 @@ class Worker extends EventEmitter{
 
   onPeerLeft(peer){
     this._state_latch = -1
-    console.log('peer ' + peer + ' left')
+    //console.log('peer ' + peer + ' left')
     this.emit('PeerLeft', {'peer':peer});
   }
 
   onMessage(message){
     var messageData = this.parseMessage(message.data.toString())
     if(messageData.command === 'REQUEST_WORK'){
-      console.log("Sending Work: " + messageData.work)
+      //console.log("Sending Work: " + messageData.work)
       this.sendWork(message.from,this._work)
       this._work += 1
     }
     else if(messageData.command === 'SEND_WORK'){
       if(this.updateWork(messageData)){
         this._state_latch = 1
-        console.log("Received Work: " + messageData.work)
+        //console.log("Received Work: " + messageData.work)
       }
       else{
-        console.log("Lead Peer is behind.  Sending the latest state.")
+        //console.log("Lead Peer is behind.  Sending the latest state.")
         this.sendWork(message.from,this._work)
       }
     }
@@ -120,7 +120,7 @@ class Worker extends EventEmitter{
     var iterations;
     var input = this._pendingWork.pop()
     var original = input
-    console.log("Work: " + original.toString())
+    //console.log("Work: " + original.toString())
     for(iterations = 0; input > 1 && flag == true; iterations++){
       [input,iterations,flag] = this.evaluation([input,iterations,flag]);
       if(this.assertions(original, input, iterations)) {
@@ -130,16 +130,16 @@ class Worker extends EventEmitter{
       }
     }
     if (!flag){
-      console.log("**Solution already found for Work: " + original.toString() + " Iterations: " + this._completedWork[input])
+      //console.log("**Solution already found for Work: " + original.toString() + " Iterations: " + this._completedWork[input])
     }
-    console.log("**Work: " + original.toString() + " Current: " + input.toString() + " Iteration: " + iterations.toString())
+    //console.log("**Work: " + original.toString() + " Current: " + input.toString() + " Iteration: " + iterations.toString())
     return iterations
   }
 
   store(original, input, iterations, flagged){
     //Call Storj
     if(flagged) {
-        console.log("***FLAGGED***: Number: " + original + " Chain Height: " + iterations);
+       // console.log("***FLAGGED***: Number: " + original + " Chain Height: " + iterations);
     }
   }
 
@@ -150,7 +150,7 @@ class Worker extends EventEmitter{
       peers.push(this._id)
       peers.sort()
       this._leadPeer = peers[0]
-      console.log("Lead peer is: " + this._leadPeer)
+      //console.log("Lead peer is: " + this._leadPeer)
     }
   }
 
