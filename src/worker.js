@@ -130,7 +130,7 @@ class Worker{
       }
     }
     if (!flag){
-      console.log(“**Solution already found for Work: ” + original.toString() + ” Iterations: ” + this._completedWork[input])
+      console.log("**Solution already found for Work: " + original.toString() + " Iterations: " + this._completedWork[input])
     }
     console.log("**Work: " + original.toString() + " Current: " + input.toString() + " Iteration: " + iterations.toString())
     return iterations
