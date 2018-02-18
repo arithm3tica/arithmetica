@@ -73,7 +73,7 @@ function updateTableObject(workerId, count) {
     rebuildTbody();
 }
 
-function deleteTableObject(workerId, count) {
+function deleteTableObject(workerId) {
     var index = participantTable.findIndex((element) => {
         return element.id == workerId;
     });
