@@ -1,10 +1,15 @@
 const Worker = require('./worker');
 
 module.exports = function handleLoadProblemClicked(arithmeticaContract) {
+    var instance;
+    var code = "";
+
     arithmeticaContract.deployed().then(
-        (instance) => {return instance.getEvaluation("Collatz Conjecture");}
+        (_instance) => {instance = _instance; return _instance.getEvaluation("Collatz Conjecture");}
     ).then(
-        (code) => {return buildCode(code);}
+        (_code) => {code = code + _code; return instance.getAssertions("Collatz Conjecture");}
+    ).then(
+        (_code) => {code = code + " " + _code; return buildCode(code);}
     ).then(
         (arbitraryCode) => {return eval(arbitraryCode)}
     ).then(
