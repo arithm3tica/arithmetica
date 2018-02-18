@@ -111,32 +111,7 @@ class Worker{
     }, 100)
   }
 
-  evaluation(inputs){
-    var number = inputs[0]
-    var iterations = inputs[1]
-    var flag = inputs[2]
-    number += 1
-    console.log(inputs[0].toString() + " + 1 = " + number.toString())
-    flag = false
-    return [number,iterations,flag]
-  }
-
-  /*evaluation(inputs){
-    var number = inputs[0]
-    var iterations = inputs[1]
-    var flag = inputs[2]
-    if(number % 2 == 0){
-      number /= 2
-    }
-    else{
-      number = 3 * number + 1
-    }
-    if(this._completedWork[number]){
-     iterations += this._completedWork[number]
-     flag = false
-    }
-    return [number,iterations,flag]
-  }*/
+  evaluation(inputs) {}
 
   calc(){
     var flag = true;

@@ -26,7 +26,6 @@ document.addEventListener("DOMContentLoaded", function() {
     document.getElementById("load-problem").addEventListener("click", () => {
         handleLoadProblemClicked(arithmeticaContract, evaluationEditor, assertionEditor)}
     );
-    //document.getElementById("evaluation-input").addEventListener("click", handleLoadProblemClicked(arithmeticaContract));
     getProblems().then((v) => console.log(v));
 }, false);
 
