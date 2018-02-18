@@ -113,25 +113,31 @@ class Worker{
 
   //The problem definition MUST override these.
   evaluation(inputs) {}
-  assertions() {}
+  assertions(original, number, iterations) {}
 
   calc(){
     var flag = true;
     var iterations;
     var input = this._pendingWork.pop()
-    var input_save = input
-    console.log("Work: " + input_save.toString())
+    var original = input
+    console.log("Work: " + original.toString())
     for(iterations = 0; input > 1 && flag == true; iterations++){
       [input,iterations,flag] = this.evaluation([input,iterations,flag])
+      if(assertions(original, input, iterations)) {
+        store(original, input, iterations, true);
+      } else {
+        store(original, input, iterations, false);
+      }
     }
     if (!flag){
-      console.log(“**Solution already found for Work: ” + input_save.toString() + ” Iterations: ” + this._completedWork[input])
+      console.log(“**Solution already found for Work: ” + original.toString() + ” Iterations: ” + this._completedWork[input])
     }
-    if(assertions(input, iterations)){
-       //Store to Storj 
-    }
-    console.log("**Work: " + input_save.toString() + " Current: " + input.toString() + " Iteration: " + iterations.toString())
+    console.log("**Work: " + original.toString() + " Current: " + input.toString() + " Iteration: " + iterations.toString())
     return iterations
+  }
+
+  store(original, input, iterations, flagged){
+   //Call Storj
   }
 
   selectLeadPeer(){
