@@ -27,6 +27,9 @@ var assertionEditor;
 var setupEditor = require('./setupEditor');
 
 document.addEventListener("DOMContentLoaded", function() {
+    if($("#submit-problem-ui").is(":visible")) {
+        $("#add-problem-button").hide()
+    }
     evaluationEditor = setupEditor("evaluation-input");
     assertionEditor = setupEditor("assertion-input");
     document.getElementById("submit-problem").addEventListener("click", () => {
