@@ -111,7 +111,9 @@ class Worker{
     }, 100)
   }
 
+  //The problem definition MUST override these.
   evaluation(inputs) {}
+  assertions() {}
 
   calc(){
     var flag = true;
@@ -122,9 +124,11 @@ class Worker{
     for(iterations = 0; input > 1 && flag == true; iterations++){
       [input,iterations,flag] = this.evaluation([input,iterations,flag])
     }
-
-    if (input == 0){
-      console.log("**Solution already found for Work: " + input_save.toString() + "Iterations: " + this._completedWork[input])
+    if (!flag){
+      console.log(“**Solution already found for Work: ” + input_save.toString() + ” Iterations: ” + this._completedWork[input])
+    }
+    if(assertions(input, iterations)){
+       //Store to Storj 
     }
     console.log("**Work: " + input_save.toString() + " Current: " + input.toString() + " Iteration: " + iterations.toString())
     return iterations
@@ -148,10 +152,12 @@ class Worker{
 
   doWork(){
     this._pendingWork.push(this._work)
+    //You have no peers.
     if(this._peers.length == 0){
       this._completedWork[this._work]=this.calc()
       this._work+=1
     }
+    //Other peers have joined
     else{
       while(this._pendingWork.length > 0){
         var result = this.calc()
