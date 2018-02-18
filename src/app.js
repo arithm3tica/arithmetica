@@ -36,23 +36,33 @@ document.addEventListener("DOMContentLoaded", function() {
     /*document.getElementById("load-problem").addEventListener("click", () => {
         handleLoadProblemClicked(arithmeticaContract, evaluationEditor, assertionEditor)}
     );*/
-    getProblems().then((v) => console.log(v));
+    getProblems().then((problemsList) => {
+        $("#problem-dropdown-menu").html(buildProblemDropdown(problemsList));}
+    );
 }, false);
+
+function buildProblemDropdown(problemsList) {
+    let innerHTML = "";
+    for(let problem of problemsList) {
+        innerHTML = innerHTML + "<a class=\"dropdown-item\" href=\"#\">" + problem + "</a>";
+    }
+    return innerHTML;
+}
 
 function getProblems() {
     var instance;
-    return Promise.resolve(
-        arithmeticaContract.deployed().then(
-            (_instance) => {instance = _instance; return _instance.getProblemCount();}
-        ).then(
-            (count) => {
-                var problems = [];
-                for(var i = 0; i < count; ++i) {
-                    instance.getProblemName(i).then((result)=>{problems.push(result);});
-                }
-                return problems;
+    var problems = []
+    var promises = [];
+    return arithmeticaContract.deployed().then(
+        (_instance) => {instance = _instance; return _instance.getProblemCount();}
+    ).then(
+        (count) => {
+            for(var i = 0; i < count; ++i) {
+                promises.push(instance.getProblemName(i).then((result)=>{problems.push(result);}));
             }
-        )
+        }
+    ).then(
+        () => {return Promise.all(promises).then(() => {return problems;});}
     );
 }
 
