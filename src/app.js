@@ -31,7 +31,8 @@ var currentProblem = "";
 
 document.addEventListener("DOMContentLoaded", function() {
     if($("#submit-problem-ui").is(":visible")) {
-        $("#add-problem-button").hide()
+        $("#add-problem-button").hide();
+        $("#contribute-problem-ui").hide();
     }
     evaluationEditor = setupEditor("evaluation-input");
     assertionEditor = setupEditor("assertion-input");
@@ -41,20 +42,17 @@ document.addEventListener("DOMContentLoaded", function() {
     document.getElementById("add-problem-button").addEventListener("click", () => {
         switchToAdd();}
     );
-    //TODO: Renable this once dashboard is created.
-    document.getElementById("load-problem").addEventListener("click", () => {
-        handleLoadProblemClicked(arithmeticaContract,workerEvent)}
-    );
     getProblems().then((problemsList) => {
         $("#problem-dropdown-menu").html(buildProblemDropdown(problemsList));
         contributeDDItems = buildDDItemList();
         for(let item of contributeDDItems) {
-            item.addEventListener("click", () => {
-                switchToContribute(); 
-                currentProblem = item.innerText;
+           item.addEventListener("click", () => {
+              currentProblem = item.innerText;
+              handleLoadProblemClicked(arithmeticaContract,currentProblem,workerEvent)
+              switchToContribute(); 
             });
-        }}
-    );
+        }
+    });
 
 }, false);
 
@@ -62,6 +60,8 @@ function switchToContribute() {
     $("#submit-problem-ui").hide();
     $("#add-problem-button").show();
     $("#contribute-problem-ui").show();
+    document.getElementById("problem-name").value = currentProblem;
+    $("#problem-name").prop('disabled', true);
 }
 
 function switchToAdd() {
@@ -69,6 +69,8 @@ function switchToAdd() {
     $("#add-problem-button").hide();
     $("#contribute-problem-ui").hide();
     currentProblem = "";
+    document.getElementById("problem-name").value = currentProblem;
+    $("#problem-name").prop('disabled', false);
 }
 
 function buildDDItemList() {
@@ -106,29 +108,6 @@ function getProblems() {
     );
 }
 
-
-
-
-
-
-
-function workerEvent(event, data){
-    if(event == 'CompletedWork'){
-        if(_submissions[data.id]){
-            _submissions[data.id]+=1;
-        }
-    }
-    else if (event == 'PeerJoined'){
-        _submissions[data.id]=0;  
-        chartData.series.push([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]) 
-    }
-    else if (event == 'PeerLeft'){
-        delete _submissions[data.id];
-        chartData.series.push([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]) 
-    }
-    console.log(data);
-
-}
 
 
 

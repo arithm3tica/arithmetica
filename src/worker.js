@@ -165,6 +165,7 @@ class Worker extends EventEmitter{
     if(this._peers.length == 0){
       this._completedWork[this._work]=this.calc()
       this._work+=1
+      this.submitWork(this._work,result)
     }
     //Other peers have joined
     else{

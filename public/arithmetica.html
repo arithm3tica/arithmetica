@@ -170,20 +170,18 @@
               </div>
             </li>
           </ul>
-          <form class="form-inline my-2 my-lg-0">
-            <button id="add-problem-button" class="btn btn-outline-secondary my-2 my-sm-0 new-problem" type="submit">+ Problem</button>
-          </form>
+          <button id="add-problem-button" class="btn btn-outline-secondary my-2 my-sm-0 new-problem">+ Problem</button>
         </div>
       </nav>
 
-    <div id="submit-problem-ui" class="form-group">
-      <div id="problem-name-container" class="input-group mb-3">
-        <div class="input-group-prepend">
-          <span class="input-group-text" id="basic-addon3">Problem Name</span>
-        </div>
-        <input id="problem-name" type="text" class="form-control" id="basic-url" aria-describedby="basic-addon3">
+    <div id="problem-name-container" class="input-group mb-3">
+      <div class="input-group-prepend">
+        <span class="input-group-text" id="basic-addon3">Problem Name</span>
       </div>
+      <input id="problem-name" type="text" class="form-control" id="basic-url" aria-describedby="basic-addon3">
+    </div>
 
+    <div id="submit-problem-ui" class="form-group">
       <div id="evaluation-input-container">
         <div class="input-group-prepend">
           <span id="evaluation-label" class="input-group-text" id="basic-addon3">Evaluation</span>
@@ -197,7 +195,6 @@
         </div>
         <div id="assertion-input"></div>
         <button id="submit-problem" type="button" class="btn btn-outline-secondary btn-lg btn-block">Submit Problem</button>
-        <button id="load-problem" type="button" class="btn btn-outline-secondary btn-lg btn-block">Load Problem</button>
       </div>
     </div>
 
@@ -246,11 +243,29 @@
             series: [[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]]
         };
         var chart = new Chartist.Line('.ct-chart', chartData, options);
+        function workerEvent(eventName, data){
+          if(eventName == 'CompletedWork'){
+              if(_submissions.hasOwnProperty(data.peer)){
+                  _submissions[data.peer]+=1;
+              }
+              else{
+                _submissions[data.peer]=0;
+              }
+          }
+          else if (eventName == 'PeerJoined'){
+              _submissions[data.peer]=0;  
+              chartData.series.push([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]) 
+          }
+          else if (eventName == 'PeerLeft'){
+              _submissions[data.peer]=-1;
+          }
+          console.log(data);
+        }
 
         setInterval(() => {
         var idCounter = 0;
         for(id in _submissions){
-            if(!_submissions[data.id]){
+            if(_submissions[id]==-1){
                 var index = chartData.series.indexOf(id);
                 chartData.series.splice(index, 1);
             }
@@ -268,7 +283,7 @@
             }
         }
 
-      }, 100)
+      }, 500)
 
         </script>
       </div>
