@@ -31,7 +31,8 @@ var currentProblem = "";
 
 document.addEventListener("DOMContentLoaded", function() {
     if($("#submit-problem-ui").is(":visible")) {
-        $("#add-problem-button").hide()
+        $("#add-problem-button").hide();
+        $("#contribute-problem-ui").hide();
     }
     evaluationEditor = setupEditor("evaluation-input");
     assertionEditor = setupEditor("assertion-input");
@@ -49,12 +50,12 @@ document.addEventListener("DOMContentLoaded", function() {
         $("#problem-dropdown-menu").html(buildProblemDropdown(problemsList));
         contributeDDItems = buildDDItemList();
         for(let item of contributeDDItems) {
-            item.addEventListener("click", () => {
-                switchToContribute(); 
-                currentProblem = item.innerText;
+           item.addEventListener("click", () => {
+              currentProblem = item.innerText;
+              switchToContribute(); 
             });
-        }}
-    );
+        }
+    });
 
 }, false);
 
@@ -62,6 +63,8 @@ function switchToContribute() {
     $("#submit-problem-ui").hide();
     $("#add-problem-button").show();
     $("#contribute-problem-ui").show();
+    document.getElementById("problem-name").value = currentProblem;
+    $("#problem-name").prop('disabled', true);
 }
 
 function switchToAdd() {
@@ -69,6 +72,8 @@ function switchToAdd() {
     $("#add-problem-button").hide();
     $("#contribute-problem-ui").hide();
     currentProblem = "";
+    document.getElementById("problem-name").value = currentProblem;
+    $("#problem-name").prop('disabled', false);
 }
 
 function buildDDItemList() {
