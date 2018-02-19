@@ -1,8 +1,7 @@
 # Arithmetica
 ### Arithmetica is a platform for computational math problems and democratizes the computation and data availability.
 
-
-![arithmetica](https://raw.githubusercontent.com/arithm3tica/arithmetica/master/arithmetica.gif)
+![arithmetica](https://raw.githubusercontent.com/arithm3tica/arithmetica/develop/arithmetica.gif)
 
 ## Inspiration
 In 1900, David Hilbert created a list of 23 mathematical problems he deemed the most important to mathematical advancement. After more than 100 years 11 of those problems remain unsolved. High quality mathematical research dating back to the 1600s is still restricted in a way that allows only the wealthy and university researchers access. Mathematicians rely on computation data to assist in solving mathematical proofs. From the data mathematicians run queries and gain insight into the underlying principles that govern mathematics.
