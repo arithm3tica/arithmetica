@@ -76,8 +76,18 @@ class Worker extends EventEmitter{
     }
     else if(messageData.command === 'SUBMIT_WORK'){
       this._completedWork[parseInt(messageData.work)]=0
-      this.emit('CompletedWork', {'peer':message.from,'work':parseInt(messageData.work),'iterations':parseInt(messageData.result)});
+      var peers = this._peers;
+      peers.push(this._id);
+      this.emit('CompletedWork', {'peer':message.from,'peers':unique(peers),'work':parseInt(messageData.work),'iterations':parseInt(messageData.result)});
     }
+  }
+
+  get peers() {
+    return this._peers;
+  }
+
+    get leadPeer() {
+    return this._leadPeer;
   }
 
   start(){

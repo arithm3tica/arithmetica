@@ -228,28 +228,44 @@
         <div class="ct-chart ct-perfect-fourth"></div>
         <script type="text/javascript">
 
+        var _steps = 0;
         var _totalSubmissions = 0;
-
-        var counter = 0;
-
+        var rebuildTable = false;
         var options = {
-        height: 500,
-        fullWidth: true,
-        lineSmooth: false
+          height: 400,
+          fullWidth: true,
+          lineSmooth: false,
+          axisY:{
+            type: Chartist.AutoScaleAxis,
+            low: 0
+          },
+          axisX: {
+            type: Chartist.AutoScaleAxis,
+            onlyInteger: true
+          },
+          showPoint: false
         };
+        var initial_data=[];
+        for(var i = 0; i < 100; i++){
+          initial_data.push({x:0,y:0});
+        }
 
         var chartData = {
-            // A labels array that can contain any sort of values
-            labels: [[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]],
             // Our series array that contains series objects or in this case series data arrays
-            series: [[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]]
+            series: [initial_data]
         };
         var chart = new Chartist.Line('.ct-chart', chartData, options);
   
         function workerEvent(eventName, data){
           if(eventName == 'CompletedWork'){
               _totalSubmissions += 1
-              updateTableObject(data.peer, data.work);
+              if(rebuildTable){
+                buildTable(data);
+                rebuildTable = false;
+              }
+              else{
+                updateTableObject(data.peer, data.work);
+              }
           }
           else if (eventName == 'PeerJoined'){
               addTableObject(data.peer, 0);
@@ -262,17 +278,42 @@
 
 
         setInterval(() => {
-          counter+=1;
-
-          chartData.labels[0].shift(counter);
-          chartData.series[0].shift()
-          chartData.series[0].push(_totalSubmissions);
-          _totalSubmissions = 0
+          _steps++;
+          chartData.series[0].shift();
+          chartData.series[0].push({x:_steps,y:_totalSubmissions});
+          _totalSubmissions = 0;
           chart.update(chartData,options);
-      }, 500)
+          if(_steps % 10 == 0){
+            rebuildTable = true;
+          }
+        }, 500)
 
       var participantTable = [];
 
+      function buildTable(data){
+        var tempTable = [];
+        for(var i = 0; i < data.peers.length; i++){
+          tempTable.push({"id": data.peers[i], "count": 0});
+        }
+        function compare(a, b) {
+          let comparison = 0;
+          if (a.id > b.id) {
+            comparison = 1;
+          } else if (a.id < b.id) {
+            comparison = -1;
+          }
+          return comparison;
+        }
+        var tempParticipantTable = participantTable;
+        tempParticipantTable.sort(compare);
+        tempTable.sort(compare);
+        if(!(tempParticipantTable.length==tempTable.length && tempParticipantTable.every((v,i)=> v.id == tempTable[i].id))){
+          console.log(tempParticipantTable);
+          console.log(tempTable);
+          participantTable = [];
+          rebuildTbody();
+        }
+      }
 
       function addTableObject(workerId, count) {
           var index = participantTable.findIndex((element) => {
