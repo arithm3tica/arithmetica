@@ -308,8 +308,6 @@
         tempParticipantTable.sort(compare);
         tempTable.sort(compare);
         if(!(tempParticipantTable.length==tempTable.length && tempParticipantTable.every((v,i)=> v.id == tempTable[i].id))){
-          console.log(tempParticipantTable);
-          console.log(tempTable);
           participantTable = [];
           rebuildTbody();
         }
