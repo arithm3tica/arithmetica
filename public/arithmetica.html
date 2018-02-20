@@ -228,7 +228,6 @@
         <div class="ct-chart ct-perfect-fourth"></div>
         <script type="text/javascript">
 
-        var _submissions = {};
         var _totalSubmissions = 0;
 
         var counter = 0;
@@ -249,24 +248,14 @@
   
         function workerEvent(eventName, data){
           if(eventName == 'CompletedWork'){
-              if(_submissions.hasOwnProperty(data.peer)){
-                  _submissions[data.peer]+=1;
-              }
-              else{
-                _submissions[data.peer]=0;
-                addTableObject(data.peer, 0);
-
-              }
               _totalSubmissions += 1
               updateTableObject(data.peer, data.work);
           }
           else if (eventName == 'PeerJoined'){
-              _submissions[data.peer]=0;
               addTableObject(data.peer, 0);
           }
           else if (eventName == 'PeerLeft'){
               deleteTableObject(data.peer);
-              _submissions[data.peer]=-1;
           }
 
         }
@@ -286,16 +275,26 @@
 
 
       function addTableObject(workerId, count) {
-          participantTable.push({"id": workerId, "count": count});
-          rebuildTbody();
+          var index = participantTable.findIndex((element) => {
+              return element.id == workerId;
+          });
+          if(index == -1){
+            participantTable.push({"id": workerId, "count": count});
+            rebuildTbody();
+          }
       }
 
       function updateTableObject(workerId, count) {
           var index = participantTable.findIndex((element) => {
               return element.id == workerId;
           });
-          participantTable[index] = {"id": workerId, "count": count};
-          rebuildTbody();
+          if( index == -1 ){
+              addTableObject(workerId, count);
+          }
+          else{
+              participantTable[index] = {"id": workerId, "count": count};
+              rebuildTbody();
+          }
       }
 
       function deleteTableObject(workerId) {
