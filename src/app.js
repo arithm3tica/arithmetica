@@ -64,7 +64,18 @@ document.addEventListener("DOMContentLoaded", function() {
               switchToContribute(); 
             });
         }
+
+        var problemLink = decodeURIComponent(location.hash.slice(1))
+        if(problemLink.indexOf(currentProblem) >= 0){
+            for(let item of contributeDDItems){
+                if(item.innerText === problemLink){
+                    item.click();
+                }
+            }
+        }
     });
+
+
 
 }, false);
 
@@ -97,7 +108,7 @@ function buildProblemDropdown(problemsList) {
     let innerHTML = "";
     let counter = 1;
     for(let problem of problemsList) {
-        innerHTML = innerHTML + "<a id=\"contribute-dd-item" + counter + "\" class=\"dropdown-item\" href=\"#\">" + problem + "</a>";
+        innerHTML = innerHTML + "<a id=\"contribute-dd-item" + counter + "\" class=\"dropdown-item\" href=\"#" + problem + "\">" + problem + "</a>";
         contributeDDItems.push("contribute-dd-item" + counter);
     }
     return innerHTML;
