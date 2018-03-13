@@ -1,6 +1,6 @@
 #!/bin/bash
 
-mkdir -p dist
+
 
 while read p; do
 	if [[ $p == "<script src='src/app.js'></script>" ]]; then
@@ -10,4 +10,4 @@ while read p; do
 	else
 		echo $p
 	fi
-done < js/public/arithmetica.html > ./dist/arithmetica.html
+done < js/public/arithmetica.html > arithmetica.html
