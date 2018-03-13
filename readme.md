@@ -8,8 +8,6 @@ Following the completion of the ETH Denver Hackathon the Arithmetica team plans 
 
 # Want to help?
 
-## Donate your computer's spare computational power
-
 ### Prerequisites
 
 ***Desktop & Mobile Browsers:*** Will work with: Brave, Chrome, Firefox
