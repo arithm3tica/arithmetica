@@ -30,7 +30,7 @@ const Worker = require('./worker');
 var handleCreateProblemClicked = require('./newProblem');
 var handleLoadProblemClicked = require('./loadProblem');
 
-var arithmeticaArtifact = require('../build/contracts/Arithmetica.json');
+var arithmeticaArtifact = require('../../sol/build/contracts/Arithmetica.json');
 var arithmeticaContract = contract(arithmeticaArtifact);
 arithmeticaContract.setProvider(web3Provider);
 
