@@ -1,11 +1,13 @@
-#! /bin/bash
+#!/bin/bash
+
+mkdir -p dist
 
 while read p; do
 	if [[ $p == "<script src='src/app.js'></script>" ]]; then
 		echo "<script>"
-		cat public/js/app.js
+		cat js/public/js/app.js
 		echo "</script>"
 	else
 		echo $p
 	fi
-done < public/arithmetica.html
+done < js/public/arithmetica.html > ./dist/arithmetica.html
