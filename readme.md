@@ -1,7 +1,7 @@
 # Arithmetica
 ### Arithmetica is a platform for computational math problems and democratizes the computation and data availability.
 
-![arithmetica](https://raw.githubusercontent.com/arithm3tica/arithmetica/develop/arithmetica.gif)
+![arithmetica](https://raw.githubusercontent.com/arithm3tica/arithmetica/master/images/arithmetica.gif)
 
 ### What's next for Arithmetica
 Following the completion of the ETH Denver Hackathon the Arithmetica team plans to refactor portions of the code to increase maintainability. We are going to approach mathematics faculty at universities to assist in long term maintenance of the project.
@@ -11,14 +11,14 @@ Following the completion of the ETH Denver Hackathon the Arithmetica team plans 
 ## Donate your computer's spare computational power
 
 ### Prerequisites
-***Desktop:*** This will work with any browser MetaMask enabled browser (Brave, Chrome, Firefox)
 
-***Mobile:*** Firefox Mobile with Metamask extension
+***Desktop & Mobile Browsers:*** Will work with: Brave, Chrome, Firefox
+
+> Note: Access to an Ethereum Node, or MetaMask is need to define new problems, but not required to contribute to existing ones.
+
 
 ### How to Use It
 Navigate to: [http://arithmetica.network](http://arithmetica.network "Arithmetica")
-
-## Contribute to the development of Arithmetica
 
 ### Build (compile && dist)
 ./build.sh
