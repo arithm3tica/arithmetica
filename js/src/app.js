@@ -2,16 +2,26 @@
 var web3Provider;
 var Web3 = require('web3');
 var contract = require('truffle-contract');
+var web3Type = "";
+
 if (typeof web3 !== 'undefined') {
   // This user has MetaMask, or another Web3 browser installed!
-    console.log("MetaMask");
+    web3Type = "MetaMask/Mist";
     web3Provider = web3.currentProvider;
     window.web3 = web3;
 }
 else
 {
-    web3Provider = new Web3.providers.HttpProvider('http://localhost:9545');
-    window.web3 = Web3
+    web3Type = "localhost";
+    var web3 = new Web3();
+    web3.setProvider(new Web3.providers.HttpProvider('http://localhost:9545'));
+    //If the user doesn't have a node running locally, then use infura
+    if(!web3.isConnected()){
+        web3.setProvider(new Web3.providers.HttpProvider("https://ropsten.infura.io/pjGrGJqwcpjegBodfps5"));
+        web3Type = "Infura";
+    }
+    web3Provider = web3.currentProvider;
+    window.web3 = web3
 }
 
 //participant-table-body
@@ -20,7 +30,7 @@ const Worker = require('./worker');
 var handleCreateProblemClicked = require('./newProblem');
 var handleLoadProblemClicked = require('./loadProblem');
 
-var arithmeticaArtifact = require('../build/contracts/Arithmetica.json');
+var arithmeticaArtifact = require('../../sol/build/contracts/Arithmetica.json');
 var arithmeticaContract = contract(arithmeticaArtifact);
 arithmeticaContract.setProvider(web3Provider);
 
@@ -54,7 +64,18 @@ document.addEventListener("DOMContentLoaded", function() {
               switchToContribute(); 
             });
         }
+
+        var problemLink = decodeURIComponent(location.hash.slice(1))
+        if(problemLink.indexOf(currentProblem) >= 0){
+            for(let item of contributeDDItems){
+                if(item.innerText === problemLink){
+                    item.click();
+                }
+            }
+        }
     });
+
+
 
 }, false);
 
@@ -87,7 +108,7 @@ function buildProblemDropdown(problemsList) {
     let innerHTML = "";
     let counter = 1;
     for(let problem of problemsList) {
-        innerHTML = innerHTML + "<a id=\"contribute-dd-item" + counter + "\" class=\"dropdown-item\" href=\"#\">" + problem + "</a>";
+        innerHTML = innerHTML + "<a id=\"contribute-dd-item" + counter + "\" class=\"dropdown-item\" href=\"#" + problem + "\">" + problem + "</a>";
         contributeDDItems.push("contribute-dd-item" + counter);
     }
     return innerHTML;

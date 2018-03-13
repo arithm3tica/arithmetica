@@ -20,12 +20,6 @@ Navigate to: [http://arithmetica.network](http://arithmetica.network "Arithmetic
 
 ## Contribute to the development of Arithmetica
 
-### Create a single deployment html file
-npm run dist
-
-### Run from local webserver
-npm start
-
 ### Build (compile && dist)
-npm run build
+./build.sh
 
