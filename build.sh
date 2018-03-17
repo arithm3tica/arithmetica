@@ -10,4 +10,4 @@ while read p; do
 	else
 		echo $p
 	fi
-done < js/public/arithmetica.html > arithmetica.html
+done < js/public/arithmetica.html > index.html
