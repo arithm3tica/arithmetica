@@ -1,0 +1,134 @@
+#logo{
+  height: 45px;
+  width: 45px;
+  margin-right: 10px;
+}
+.black-bar{
+  height: 1px;
+  width: auto;
+  background: #000000;
+}
+#assertion-input-container {
+  margin-top: 37px;
+}
+#problem-name-container {
+  margin-bottom: 37px !important;
+}
+#submit-problem{
+  margin-top: 37px;
+}
+.btn-outline-secondary{
+  border: black solid 1px !important;
+  color: #000000;
+}
+.btn-outline-secondary:hover{
+  background: #000000;
+}
+.btn-outline-secondary:active:focus{
+  background: #FFFFFF;
+}
+
+.btn{
+    -webkit-box-shadow: none!important;
+    box-shadow: none!important;
+    background: #FFFFFF;
+}
+
+.ace_gutter-layer{
+  background: #FFFFFF;
+}
+.ace-chrome .ace_print-margin{
+  background: #000000 !important;
+}
+
+.form-control{
+  border-color: #000000;
+  border-radius: 0 !important;
+  outline: none;
+  border-top: solid 0px !important;
+  border-right: solid 0px !important;
+}
+.form-control:focus{
+  border-color: #000000;
+  -webkit-box-shadow: none;
+  box-shadow: none;
+}
+
+.input-group-text{
+  border: black solid 1px !important;
+  border-radius: 0 !important;
+  border-left: solid 0px !important;
+  border-top: solid 0px !important;
+  outline: none;
+  color: black;
+}
+#assertion-label{
+  border: black solid 1px !important;
+  border-radius: 0 !important;
+  border-left: solid 0px !important;
+  border-bottom: solid 0px !important;
+  outline: none;
+  color: black;
+}
+#evaluation-label{
+  border: black solid 1px !important;
+  border-radius: 0 !important;
+  border-left: solid 0px !important;
+  border-bottom: solid 0px !important;
+  outline: none;
+  color: black;
+}
+
+#submit-problem{
+  border-radius: 0 !important;
+  border-left: solid 0px !important;
+  border-right: solid 0px !important;
+  outline: none;
+}
+.ace-chrome {
+  background-color: #FFFFFF;
+  color: black;
+  border: black solid 1px !important;
+  border-left: solid 0px !important;
+  border-right: solid 0px !important;
+}
+.navbar-light .navbar-nav .nav-link:focus, .navbar-light .navbar-nav .nav-link:hover {
+  color: #000000;
+}
+.navbar-light .navbar-nav .nav-link {
+  color: #000000;
+}
+.dropdown-menu.show {
+  display: block;
+  border: black solid 1px !important;
+} 
+.btn-outline-secondary:not(:disabled):not(.disabled).active, .btn-outline-secondary:not(:disabled):not(.disabled):active, .show>.btn-outline-secondary.dropdown-toggle {
+  color: #000000;
+  background-color: #FFFFFF;
+  border-color: #0000000;
+}
+.navbar {
+  border: black solid 1px !important;
+  border-radius: 0 !important;
+  border-left: solid 0px !important;
+  border-right: solid 0px !important;
+}
+.mb-3, .my-3 {
+  margin: 0px !important;
+}
+.dropdown-item.active, .dropdown-item:active {
+  color: #FFFFFF;
+  text-decoration: none;
+  background-color: #000000;
+}
+.scroll-table {
+  border: black solid 1px !important;
+  border-left: solid 0px !important;
+  border-right: solid 0px !important;
+  height: 238px;
+  overflow: scroll;
+}
+.plot-title {
+text-align:center;
+
+}
