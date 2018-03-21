@@ -93,17 +93,14 @@
         <div class="ct-chart ct-perfect-fourth submissions"></div>
         <br>
         <div class="plot-title"><h3>Iterations per Submission</h3></div>
-        <div class="ct-chart ct-perfect-fourth iterations"></div>
         <br>
         <br>
-        <br>
-        <div id="visualization"></div>
+        <div id="iterationsChart"></div>
 
         <script type="text/javascript">
         var _steps = 0;
         var _totalSubmissions = 0;
         var _rebuildTable = false;
-        var _iterationData = [];
    
         var submissionsChartOptions = {
             height: 400,
@@ -131,33 +128,10 @@
 
         var submissionsChart = new Chartist.Line('.submissions', submissionsChartData, submissionsChartOptions);
 
+
+        var container = document.getElementById('iterationsChart');
+        var iterationsData = [];
         var iterationsChartOptions = {
-            height: 800,
-            fullWidth: true,
-            axisY:{
-              type: Chartist.AutoScaleAxis,
-              low: 0,
-              onlyInteger: true
-            },
-            axisX: {
-              type: Chartist.AutoScaleAxis,
-              onlyInteger: true
-            },
-            showLine: false,
-            showPoint: true
-        };
-
-        var iterationsChartData = {
-            series: [[]]
-        };
-
-        var iterationsChart = new Chartist.Line('.iterations',iterationsChartData,iterationsChartOptions);
-
-        var container = document.getElementById('visualization');
-        var items = [];
-
-        var dataset = new vis.DataSet(items);
-        var options = {
             start: 0,
             end: 1,
             showCurrentTime: false,
@@ -185,13 +159,12 @@
             defaultGroup: 'Scatterplot',
             height: '800px'
         };
-        var graph2d = new vis.Graph2d(container, items, options);
+        var iterationsChart = new vis.Graph2d(container, iterationsData, iterationsChartOptions);
   
         function workerEvent(eventName, data){
           if(eventName == 'CompletedWork'){
               _totalSubmissions += 1;
-              iterationsChartData.series[0].push({x:data.work,y:data.iterations})
-              items.push({x:data.work,y:data.iterations});
+              iterationsData.push({x:data.work,y:data.iterations});
               if(_rebuildTable){
                 buildTable(data);
                 _rebuildTable = false;
@@ -216,10 +189,8 @@
           submissionsChartData.series[0].push({x:_steps,y:_totalSubmissions});
           submissionsChart.update(submissionsChartData,submissionsChartOptions);
           _totalSubmissions = 0;
-          iterationsChart.update(iterationsChartData,iterationsChartOptions);
-          graph2d.setItems(items);
-          graph2d.fit();
-          _iterationData = [];
+          iterationsChart.setItems(iterationsData);
+          iterationsChart.fit();
           if(_steps % 10 == 0){
             _rebuildTable = true;
           }
