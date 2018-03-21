@@ -15,11 +15,8 @@
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
-    <link rel="stylesheet" href="//cdn.jsdelivr.net/chartist.js/latest/chartist.min.css">
-    <script src="//cdn.jsdelivr.net/chartist.js/latest/chartist.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.js"></script>
-
     <script src='src/app.js'></script>
     <link rel='stylesheet' type='text/css' href='css/app.css'>
     
@@ -53,7 +50,7 @@
       <input id="problem-name" type="text" class="form-control" id="basic-url" aria-describedby="basic-addon3">
     </div>
 
-    <div id="submit-problem-ui" class="form-group">
+    <div id="submit-problem-ui">
       <div id="evaluation-input-container">
         <div class="input-group-prepend">
           <span id="evaluation-label" class="input-group-text" id="basic-addon3">Evaluation</span>
@@ -70,7 +67,7 @@
       </div>
     </div>
 
-    <div id="contribute-problem-ui" class="form-group">
+    <div id="contribute-problem-ui">
         <div class="input-group-prepend">
           <span id="evaluation-label" class="input-group-text" id="basic-addon3">Peers</span>
         </div>
@@ -88,50 +85,81 @@
             </tbody>
           </table>
         </div>
-        <br>
-        <div class="plot-title"><h3>Submissions per Second</h3></div>
-        <div class="ct-chart ct-perfect-fourth submissions"></div>
-        <br>
-        <div class="plot-title"><h3>Iterations per Submission</h3></div>
-        <br>
-        <br>
-        <div id="iterationsChart"></div>
-
+        <div class="plots">
+          <div class="plot-title plot-left"><h3>Submission Rate</h3>
+          <div id="submissionsChart"></div>
+          </div>
+          <div class="plot-title plot-right"><h3>Number of Iterations</h3>
+          <div id="iterationsChart"></div>
+          </div>
+        </div>
         <script type="text/javascript">
-        var _steps = 0;
+        var _steps = -1;
         var _totalSubmissions = 0;
         var _rebuildTable = false;
-   
+
+        var submissionsContainer = document.getElementById('submissionsChart');
         var submissionsChartOptions = {
-            height: 400,
-            fullWidth: true,
-            lineSmooth: false,
-            axisY:{
-              type: Chartist.AutoScaleAxis,
-              low: 0
+            min: 0,
+            start: 0,
+            end: 1,
+            showCurrentTime: false,
+            showMajorLabels: false,
+            dataAxis: {
+                left: {
+                  title:{
+                    text: 'Submissions'
+                  }
+                }
             },
-            axisX: {
-              type: Chartist.AutoScaleAxis,
-              onlyInteger: true
+            format: {
+              minorLabels: {
+                  millisecond: 'x',
+                  second: 'x',
+                  minute: 'x',
+                  hour: 'x',
+                  weekday: 'x',
+                  day: 'x',
+                  month: 'x',
+                  year: 'x'
+              },
+              majorLabels: {
+                  millisecond: '',
+                  second: '',
+                  minute: '',
+                  hour: '',
+                  weekday: '',
+                  day: '',
+                  month: '',
+                  year: ''
+              }
             },
-            showLine: true,
-            showPoint: false
+            sort: false,
+            sampling:false,
+            style:'line',
+            zoomable: false,
+            moveable: false,
+            drawPoints: {
+                enabled: false,
+                size: 6,
+                style: 'circle' // square, circle
+            },
+            height: '400px'
         };
-        var initial_data=[];
-        for(var i = 0; i < 100; i++){
-          initial_data.push({x:0,y:0});
-        }
 
-        var submissionsChartData = {
-            series: [initial_data]
-        };
-
-        var submissionsChart = new Chartist.Line('.submissions', submissionsChartData, submissionsChartOptions);
+        var submissionsData=[];
+        //for(var i = 0; i < 1; i++){
+        //  submissionsData.push({x:i,y:10});
+        //}
 
 
-        var container = document.getElementById('iterationsChart');
+        var submissionsChart = new vis.Graph2d(submissionsContainer, submissionsData, submissionsChartOptions);
+
+
+        var iterationsContainer = document.getElementById('iterationsChart');
         var iterationsData = [];
         var iterationsChartOptions = {
+            min:0,
             start: 0,
             end: 1,
             showCurrentTime: false,
@@ -146,6 +174,28 @@
                   }
                 }
             },
+            format: {
+              minorLabels: {
+                  millisecond: 'x',
+                  second: 'x',
+                  minute: 'x',
+                  hour: 'x',
+                  weekday: 'x',
+                  day: 'x',
+                  month: 'x',
+                  year: 'x'
+              },
+              majorLabels: {
+                  millisecond: '',
+                  second: '',
+                  minute: '',
+                  hour: '',
+                  weekday: '',
+                  day: '',
+                  month: '',
+                  year: ''
+              }
+            },
             sort: false,
             sampling:false,
             style:'points',
@@ -157,9 +207,9 @@
                 style: 'circle' // square, circle
             },
             defaultGroup: 'Scatterplot',
-            height: '800px'
+            height: '400px'
         };
-        var iterationsChart = new vis.Graph2d(container, iterationsData, iterationsChartOptions);
+        var iterationsChart = new vis.Graph2d(iterationsContainer, iterationsData, iterationsChartOptions);
   
         function workerEvent(eventName, data){
           if(eventName == 'CompletedWork'){
@@ -185,16 +235,23 @@
 
         setInterval(() => {
           _steps++;
-          submissionsChartData.series[0].shift();
-          submissionsChartData.series[0].push({x:_steps,y:_totalSubmissions});
-          submissionsChart.update(submissionsChartData,submissionsChartOptions);
+          if(submissionsData.length > 50){
+            submissionsData.shift();
+          }
+          //The first two time-steps have low submission rates so we filter them out
+          if(_steps > 2){
+            submissionsData.push({x:_steps-2,y:_totalSubmissions});
+          }
+
+          submissionsChart.setItems(submissionsData);
+          submissionsChart.fit();
           _totalSubmissions = 0;
           iterationsChart.setItems(iterationsData);
           iterationsChart.fit();
           if(_steps % 10 == 0){
             _rebuildTable = true;
           }
-        }, 500)
+        }, 1000)
 
       var participantTable = [];
 

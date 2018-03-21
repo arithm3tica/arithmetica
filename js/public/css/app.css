@@ -128,7 +128,23 @@
   height: 238px;
   overflow: scroll;
 }
-.plot-title {
-text-align:center;
 
+.plots{
+  padding-top: 25px;
+  padding-left: 50px;
+  padding-right: 50px;
+}
+
+.plot-title {
+  text-align:center;
+}
+
+.plot-left {
+  width: 50%;
+  padding-right: 25px;
+  float: left;
+}
+.plot-right {
+  padding-left: 25px;
+  margin-left: 50%;
 }
