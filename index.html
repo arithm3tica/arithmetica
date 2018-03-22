@@ -156,6 +156,7 @@
   padding-top: 25px;
   padding-left: 50px;
   padding-right: 50px;
+  overflow: hidden;
 }
 
 .plot-title {
@@ -167,9 +168,27 @@
   padding-right: 25px;
   float: left;
 }
+
 .plot-right {
   padding-left: 25px;
   margin-left: 50%;
+  overflow: hidden;
+}
+
+@media screen and (max-width: 800px) {
+   .plot-left { 
+    float: none;
+    margin-right:0;
+    padding-right: 0px;
+    width:auto;
+  }
+  .plot-right { 
+    float: none;
+    padding-top: 25px;
+    margin-left:0;
+    padding-left: 0px;
+    width:auto;
+  }
 }</style>
 
 </head>
