@@ -11,6 +11,10 @@ while read p; do
 		echo "<style type='text/css'>"
 		cat js/public/css/app.css
 		echo "</style>"
+	elif [[ $p == "<script src='js/ui.js'></script>" ]]; then
+		echo "<script>"
+		cat js/public/js/ui.js
+		echo "</script>"
 	else
 		echo $p
 	fi
