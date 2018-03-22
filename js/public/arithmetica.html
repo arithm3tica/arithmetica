@@ -78,6 +78,7 @@
               <tr>
                 <th>#</th>
                 <th>ID</th>
+                <th>Role</th>
                 <th>Current Submission</th>
               </tr>
             </thead>
@@ -97,6 +98,8 @@
         var _steps = -1;
         var _totalSubmissions = 0;
         var _rebuildTable = false;
+        var _leadPeer = '';
+        var _id = '';
 
         var submissionsContainer = document.getElementById('submissionsChart');
         var submissionsChartOptions = {
@@ -229,6 +232,12 @@
           else if (eventName == 'PeerLeft'){
               deleteTableObject(data.peer);
           }
+          else if (eventName == 'LeadPeerSelected'){
+              _leadPeer = data.peer;
+          }
+          else if (eventName == 'InitCompleted'){
+              _id = data.peer;
+          }
 
         }
 
@@ -315,11 +324,25 @@
 
       function generateTbodyString() {
           let innerHTML = "";
+          let myHTML = "";
           let counter = 1;
           for(let party of participantTable) {
-              innerHTML = innerHTML + "<tr> <th scope=\\\"row\\\">" + counter + "</th><td>" + party.id + "</td><td>" + party.count + "</td></tr>";
-              counter++;
+              if(party.id === _leadPeer){
+                role = 'Leader'
+              }
+              else{
+                role = 'Worker'
+              }
+
+              if(party.id !== _id){
+                innerHTML = innerHTML + "<tr> <th scope=\\\"row\\\"> Peer " + counter + "</th><td>" + party.id + "</td><td>" + role + "</td><td>" + party.count + "</td></tr>";
+                counter++;
+              }
+              else {
+                myHTML = "<tr> <th scope=\\\"row\\\"> Me </th><td>" + party.id + "</td><td>" + role + "</td><td>" + party.count + "</td></tr>";
+              }
           }
+          innerHTML = myHTML + innerHTML;
           return innerHTML;
       }
 
