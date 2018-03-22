@@ -16,6 +16,9 @@ module.exports = function handleLoadProblemClicked(arithmeticaContract,problemNa
         (Problem) => {return new Problem();}
     ).then(
         (worker) => {
+             worker.on('InitCompleted',(data) => {
+                callback('InitCompleted',data);
+            });           
             worker.on('PeerJoined',(data) => {
                 callback('PeerJoined',data);
             });
@@ -24,6 +27,9 @@ module.exports = function handleLoadProblemClicked(arithmeticaContract,problemNa
             });
             worker.on('CompletedWork',(data) => {
                 callback('CompletedWork',data);
+            });
+            worker.on('LeadPeerSelected',(data) => {
+                callback('LeadPeerSelected',data);
             });
             worker.start();
 

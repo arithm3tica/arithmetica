@@ -102,9 +102,9 @@ class Worker extends EventEmitter{
     this._ipfs.once('ready', () => this._ipfs.id((err, info) => {
       if (err) { throw err }
       this._id = info.id;
-      this._leadPeer = info.id;
       console.log('IPFS node ready with address ' + info.id);
-
+      this.emit('InitCompleted', {'peer':this._id});
+      this.selectLeadPeer();
       this.workLoop();
     }))
   }
@@ -180,6 +180,7 @@ class Worker extends EventEmitter{
   }
 
   selectLeadPeer(){
+    var prevLeadPeer = this._leadPeer;
     if(this._peers.length > 0)
     {
       var peers = this._peers;
@@ -187,6 +188,13 @@ class Worker extends EventEmitter{
       peers.sort();
       this._leadPeer = peers[0];
       //console.log("Lead peer is: " + this._leadPeer)
+    }
+    else{
+      this._leadPeer = this._id
+    }
+
+    if(prevLeadPeer !== this._leadPeer){
+      this.emit('LeadPeerSelected', {'peer':this._leadPeer});
     }
   }
 
@@ -210,7 +218,7 @@ class Worker extends EventEmitter{
     } 
     else{
       this._state = 0;
-      if(this._peers.length == 0) this._leadPeer = this._id;
+      if(this._peers.length == 0) this.selectLeadPeer();
       if(this._leadPeer == this._id) this._state = 1;
       this._state_latch = this._state;
     }
