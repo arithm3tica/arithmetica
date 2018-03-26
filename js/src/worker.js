@@ -1,23 +1,35 @@
 'use strict'
 
 const EventEmitter = require('events');
-const IPFS = require('ipfs')
-const Room = require('ipfs-pubsub-room')
+const IPFS = require('ipfs');
+const Room = require('ipfs-pubsub-room');
+const OrbitDB = require('orbit-db');
 var unique = require('array-unique');
+
+const STATES = Object.freeze({
+  SYNC: Symbol("SYNC"),
+  GENERATE_WORK_SEQUENCE: Symbol("GENERATE_WORK_SEQUENCE"),
+  WORK: Symbol("WORK")
+});
 
 class Worker extends EventEmitter{
 
+  static get STATES() {
+    return STATES;
+  }
+
   constructor(roomName='OPO'){
     super();
-
+    this._roomName = roomName;
     this._id = '';
-    this._leadPeer = '';
+    this._index = 1; //1 based
+    this._workIndex = 0; 
     this._peers = [];
-    this._state = 1;
-    this._state_latch = 1;
-    this._work = 0;
-    this._pendingWork = [];
-    this._completedWork = {};
+    this._state = Worker.STATES.GENERATE_WORK_SEQUENCE;
+    this._state_latch = Worker.STATES.GENERATE_WORK_SEQUENCE;
+    this._workSequence = [];
+    this._currentWork = 0;
+    this._workSequenceLength = 10;
 
     this._ipfs = new IPFS({
       //allows us to test using same browser instance, but different windows
@@ -34,234 +46,151 @@ class Worker extends EventEmitter{
       }
     })
 
-    //define pubsub room
-    this._room = Room(this._ipfs, roomName);
+    this._ipfs.on('ready', async () => {
 
-    //register events 
-    this._room.on('peer joined', (peer) => this.onPeerJoined(peer));
-    this._room.on('peer left', (peer) => this.onPeerLeft(peer));
-    this._room.on('message', (message) => this.onMessage(message));
+      this._ipfs.id((err, info) => {
+        this._id = info.id;
+      })
+
+      this._orbitdb = new OrbitDB(this._ipfs,'./test');
+      const dbConfig = { replicate: true, create: true, sync: true, overwrite: false, write: ['*'], localOnly: false };
+      this._workCompleted = await this._orbitdb.keyvalue(this._roomName,dbConfig);
+      //this._workCompleted = await orbitdb.open('/orbitdb/QmbLUdHKozxBDeKsDKyGEKeLUyi7YhVxiVo7VJMrCPqrvq/Collatz Conjecture',{ sync: true});
+      
+      this._workCompleted.events.on('replicate', (address) => console.log('db - replicate', address ) );
+      this._workCompleted.events.on('replicate.progress', (address) => console.log('db - replicate progress', address) );
+      this._workCompleted.events.on('write', (res) => {console.log(res)});
+      await this._workCompleted.load();
+      console.log('OrbitDB ready with address ' + this._workCompleted.address);
+
+      this.emit('InitCompleted', {'peer':this._id});
+
+      //define pubsub room
+      this._room = Room(this._ipfs, roomName);
+
+      //register events 
+      this._room.on('peer joined', (peer) => this.onPeerJoined(peer));
+      this._room.on('peer left', (peer) => this.onPeerLeft(peer));
+
+      
+      this.mainLoop();
+    })
 
   }
 
   onPeerJoined(peer){
-    //console.log('peer ' + peer + ' joined')
-    this._state_latch = -1;
-    this.requestWork();
+    console.log('peer ' + peer + ' joined')
+    this._state_latch = Worker.STATES.GENERATE_WORK_SEQUENCE;
     this.emit('PeerJoined', {'peer':peer});
   }
 
   onPeerLeft(peer){
-    this._state_latch = -1;
-    //console.log('peer ' + peer + ' left')
+    console.log('peer ' + peer + ' left')
+    this._state_latch = Worker.STATES.GENERATE_WORK_SEQUENCE;
     this.emit('PeerLeft', {'peer':peer});
   }
 
-  onMessage(message){
-    var messageData = this.parseMessage(message.data.toString());
-    if(messageData.command === 'REQUEST_WORK'){
-      //console.log("Sending Work: " + messageData.work)
-      this.sendWork(message.from,this._work);
-      this._work += 1;
-    }
-    else if(messageData.command === 'SEND_WORK'){
-      if(this.updateWork(messageData)){
-        this._state_latch = 1;
-        //console.log("Received Work: " + messageData.work)
-      }
-      else{
-        //console.log("Lead Peer is behind.  Sending the latest state.")
-        //console.log("state: " + this._state)
-        this.sendWork(message.from,this._work);
-      }
-    }
-    else if(messageData.command === 'SUBMIT_WORK'){
-      //if(this._completedWork.hasOwnProperty(parseInt(messageData.work))){
-      //  console.log(messageData);
-      //  console.log(this._completedWork[parseInt(messageData.work)]);
-      //}
-      this._completedWork[parseInt(messageData.work)]=parseInt(messageData.result);
-      var peers = [];
-      if(this._peers.length > 0){
-        peers = this._peers;
-      }
-      peers.push(this._id);
-      this.emit('CompletedWork', {'peer':message.from,'peers':unique(peers),'work':parseInt(messageData.work),'iterations':parseInt(messageData.result)});
-    }
-  }
+  onMessage(db){
 
-  get peers() {
-    return this._peers;
-  }
-
-  get leadPeer() {
-    return this._leadPeer;
+    console.log('replicated event received');
+    console.log(db);
+    
   }
 
   start(){
-    this._ipfs.once('ready', () => this._ipfs.id((err, info) => {
-      if (err) { throw err }
-      this._id = info.id;
-      console.log('IPFS node ready with address ' + info.id);
-      this.emit('InitCompleted', {'peer':this._id});
-      this.selectLeadPeer();
-      this.workLoop();
-    }))
+    
   }
 
-  interval(func, wait, times){
-    var interv = function(w, t){
-        return function(){
-            if(typeof t === "undefined" || t-- > 0){
-                setTimeout(interv, w);
-                try{
-                    func.call(null);
-                }
-                catch(e){
-                    t = 0;
-                    throw e.toString();
-                }
-            }
-        };
-    }(wait, times);
-    setTimeout(interv, wait);
-  }
+  mainLoop(){
 
-  workLoop(){
-
-   this.interval(() => {
-
+   setInterval(() => {
       this._peers = this._room.getPeers();
-      if(this._state == -1){
-        this.selectLeadPeer();
+      if(this._state == Worker.STATES.GENERATE_WORK_SEQUENCE){
+        this.assignPeerIndexes();
+        this.generateWorkSequence();
       } 
-      else if( this._state == 0){
-        this.requestWork();
-      } 
-      else if(this._state == 1) {
+      else if(this._state == Worker.STATES.WORK) {
         this.doWork();
       }
       this.updateState();
-
     }, 100)
 
   }
 
-  //The problem definition MUST override these.
+  assignPeerIndexes(){
+    var peers = this._peers;
+    var numPeers = peers.length;
+
+    peers.push(this._id);
+    peers.sort();
+
+    this._index = peers.indexOf(this._id) + 1;
+  }
+
+  generateWorkSequence(){
+    //Work Sequence for a Peer:
+    //Let N = peer index
+    //Let i = sequence index
+    //Let offset = W(N,0) + N
+    //W(N,i) = Num(Peers)*i + offset
+
+    var numPeers = this._peers.length;
+    var length = this._workSequenceLength;
+    var offset = this._currentWork + this._index;
+    this._workSequence = Array.from(Array(length).keys(), i => numPeers*i + offset);
+
+    //this.emit('WorkSequenceGenerated', {});
+  }
+
+  doWork(){
+    var result = this.calc(this._workSequence.shift());
+    async () => {
+      await this._workCompleted.put(result[0],{iterations:result[1],workIndex:this._workIndex,peer:this._id});
+    }
+    var peers = [];
+    if(this._peers.length > 0){
+      peers = this._peers;
+    }
+    peers.push(this._id);
+    this._currentWork = result[0];
+    this.emit('CompletedWork', {'peer':this._id,'peers':unique(peers),'work':result[0],'iterations':result[1]});
+    this._workIndex += 1;
+  }
+
+  updateState(){
+    if(this._workSequence.length > 0){
+      this._state = Worker.STATES.WORK;
+    }
+    else {
+      this._state = Worker.STATES.GENERATE_WORK_SEQUENCE;
+    }
+  }
+
+    //The problem definition MUST override these.
   evaluation(inputs) {}
   assertions(original, number, iterations) {}
 
-  calc(){
+  calc(input){
     var flag = true;
-    var iterations;
-    var input = this._pendingWork.pop()
+    var iterations = 0;
     var original = input
     //console.log("Work: " + original.toString())
     for(iterations = 0; input > 1 && flag == true; iterations++){
       [input,iterations,flag] = this.evaluation([input,iterations,flag]);
       if(this.assertions(original, input, iterations)) {
-        this.store(original, input, iterations, true);
+        //this.store(original, input, iterations, true);
       } else {
-        this.store(original, input, iterations, false);
+        //this.store(original, input, iterations, false);
       }
     }
-    if (!flag){
-      //console.log("**Solution already found for Work: " + original.toString() + " Iterations: " + this._completedWork[input])
+     //console.log("**Work: " + original.toString() + " Current: " + input.toString() + " Iteration: " + iterations.toString())
+    /*if (!flag){
+      console.log("**Solution already found for Work: " + original.toString() + " Iterations: " + this._workCompleted[input])
     }
-    //console.log("**Work: " + original.toString() + " Current: " + input.toString() + " Iteration: " + iterations.toString())
+    else{
+      console.log("**Work: " + original.toString() + " Current: " + input.toString() + " Iteration: " + iterations.toString())
+    }*/
     return [original,iterations];
-  }
-
-  store(original, input, iterations, flagged){
-    //Call Storj
-    if(flagged) {
-       // console.log("***FLAGGED***: Number: " + original + " Chain Height: " + iterations);
-    }
-  }
-
-  selectLeadPeer(){
-    var prevLeadPeer = this._leadPeer;
-    if(this._peers.length > 0)
-    {
-      var peers = this._peers;
-      peers.push(this._id);
-      peers.sort();
-      this._leadPeer = peers[0];
-      //console.log("Lead peer is: " + this._leadPeer)
-    }
-    else{
-      this._leadPeer = this._id
-    }
-
-    if(prevLeadPeer !== this._leadPeer){
-      this.emit('LeadPeerSelected', {'peer':this._leadPeer});
-    }
-  }
-
-  requestWork(){
-    var message = this.constructMessage('REQUEST_WORK','');
-    this._room.sendTo(this._leadPeer,message);
-  }
-
-  doWork(){
-    this._pendingWork.push(this._work);
-    while(this._pendingWork.length > 0){
-      var result = this.calc();
-      this.submitWork(result[0],result[1]);
-      this._work+=1;
-    }
-  }
-
-  updateState(){
-    if(this._state != this._state_latch){
-      this._state = this._state_latch;
-    } 
-    else{
-      this._state = 0;
-      if(this._peers.length == 0) this.selectLeadPeer();
-      if(this._leadPeer == this._id) this._state = 1;
-      this._state_latch = this._state;
-    }
-  }
-
-  sendWork(peer,work){
-    var message = this.constructMessage('SEND_WORK',work,0);
-    this._room.sendTo(peer,message);
-  }
-
-  submitWork(work,result){
-    if(this._peers.length == 0){
-      var message = {from:this._id,data:this.constructMessage('SUBMIT_WORK',work,result)}
-      this.onMessage(message);
-    }
-    else{
-      var message = this.constructMessage('SUBMIT_WORK',work,result);
-      this._room.broadcast(message);
-    }
-  }
-
-  updateWork(message){
-    var result = false;
-    var temp = parseInt(message.work) ;
-    if(temp >= this._work){
-      if(this._state == 1){
-        if(this._id === this._leadPeer){
-          this._pendingWork = [];
-          this._work = temp;
-        }
-        //load all 10 into pending work
-        //for(var i=0;i<10;i++){
-        //  this._pendingWork.push(temp+i);
-        //}
-        this._pendingWork.push(temp);
-        unique(this._pendingWork);
-      }
-      else{
-        this._work = temp;
-      }
-      result = true;
-    }
-    return result;
   }
 
   parseMessage(message){

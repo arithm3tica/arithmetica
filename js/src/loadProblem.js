@@ -49,10 +49,6 @@ function buildCode(_code, problemName) {
     else{\
       number = 3 * number + 1;\
     }\
-    if(this._completedWork.hasOwnProperty(number)){\
-     iterations += this._completedWork[number];\
-     flag = false;\
-    }\
     return [number,iterations,flag];\
 } assertions(original, number, iterations) {\
   if(iterations > 500) return true;\
