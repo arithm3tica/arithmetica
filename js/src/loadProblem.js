@@ -39,23 +39,6 @@ module.exports = function handleLoadProblemClicked(arithmeticaContract,problemNa
 }
 
 function buildCode(_code, problemName) {
-    _code = "evaluation(items) {\
-    var number = items[0];\
-    var iterations = items[1];\
-    var flag = items[2];\
-    if(number % 2 == 0){\
-      number /= 2;\
-    }\
-    else{\
-      number = 3 * number + 1;\
-    }\
-    if(this._completedWork.hasOwnProperty(number)){\
-     iterations += this._completedWork[number];\
-     flag = false;\
-    }\
-    return [number,iterations,flag];\
-} assertions(original, number, iterations) {\
-  if(iterations > 500) return true;\
-}"
+
     return "class Problem extends Worker { constructor(){ super(\'" + problemName + "\'); }" + _code + "} module.exports = Problem;"
 }

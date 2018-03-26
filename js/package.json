@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "build": "node_modules/.bin/browserify src/app.js | node_modules/.bin/uglifyjs > public/js/app.js",
+    "build-dev": "node_modules/.bin/browserify src/app.js > public/js/app.js",
     "serve": "beefy app.js --live"
   },
   "author": "jonny rhea",
