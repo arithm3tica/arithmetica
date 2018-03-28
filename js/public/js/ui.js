@@ -5,10 +5,11 @@ var leadPeer = '';
 var id = '';
 
 var submissionsContainer = document.getElementById('submissionsChart');
+var submissionsWindow = {min: 0,max: 50};
 var submissionsChartOptions = {
     min: 0,
-    start: 0,
-    end: 1,
+    start: submissionsWindow.min,
+    end: submissionsWindow.max,
     showCurrentTime: false,
     showMajorLabels: false,
     dataAxis: {
@@ -54,16 +55,17 @@ var submissionsChartOptions = {
 };
 
 var submissionsData=[];
-
-var submissionsChart = new vis.Graph2d(submissionsContainer, submissionsData, submissionsChartOptions);
+var submissionsDataset = new vis.DataSet(submissionsData,{});
+var submissionsChart = new vis.Graph2d(submissionsContainer, submissionsDataset, submissionsChartOptions);
 
 
 var iterationsContainer = document.getElementById('iterationsChart');
 var iterationsData = [];
+var xIterationsMax = 100;
 var iterationsChartOptions = {
     min:0,
     start: 0,
-    end: 1,
+    end: xIterationsMax,
     showCurrentTime: false,
     showMajorLabels: false,
     dataAxis: {
@@ -98,7 +100,7 @@ var iterationsChartOptions = {
           year: ''
       }
     },
-    sort: false,
+    sort: true,
     sampling:false,
     style:'points',
     zoomable: false,
@@ -111,7 +113,9 @@ var iterationsChartOptions = {
     defaultGroup: 'Scatterplot',
     height: '400px'
 };
-var iterationsChart = new vis.Graph2d(iterationsContainer, iterationsData, iterationsChartOptions);
+var iterationsData = [];
+var iterationsDataset = new vis.DataSet(iterationsData,{});
+var iterationsChart = new vis.Graph2d(iterationsContainer, iterationsDataset, iterationsChartOptions);
 
 function workerEvent(eventName, data){
   if(eventName == 'CompletedWork'){
@@ -143,22 +147,34 @@ function workerEvent(eventName, data){
 
 setInterval(() => {
   steps++;
-  
-  if(submissionsData.length > 50){
+  var submissionItemToDelete = 0;
+  if(submissionsDataset.length > 50){
     //only show 50 secs worth of submission rate data on chart
-    submissionsData.shift();
-  }
-  else if(steps > 2){
-    //The first two time-steps have low submission rates so we filter them out
-    submissionsData.push({x:steps-2,y:totalSubmissions});
+    submissionItemToDelete = submissionsDataset.min('x');
+    submissionsDataset.remove(submissionItemToDelete);
+    if(steps > submissionsWindow.max){
+        submissionsWindow.min = steps-10;
+        submissionsWindow.max = steps + 40;
+        submissionsChart.setWindow(submissionsWindow.min,submissionsWindow.max);
+    }
+
   }
 
-  submissionsChart.setItems(submissionsData);
-  submissionsChart.fit();
+  submissionsData.push({x:steps,y:totalSubmissions});  
+  //submissionsChart.setItems(submissionsData);
+  submissionsDataset.add(submissionsData);  
+  //submissionsChart.fit();
+  submissionsData = [];
   totalSubmissions = 0;
-
-  iterationsChart.setItems(iterationsData);
-  iterationsChart.fit();
+  var max = iterationsDataset.max('x');
+  if(max !== null && max.x > xIterationsMax){
+    xIterationsMax += xIterationsMax; 
+    iterationsChart.setWindow(0,xIterationsMax);
+  }
+  //iterationsChart.setItems(iterationsData);
+  iterationsDataset.add(iterationsData)
+  iterationsData = [];
+  //iterationsChart.fit();
 
   if(steps % 10 == 0){
     rebuildTable = true;

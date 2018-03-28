@@ -3,7 +3,6 @@
 const EventEmitter = require('events');
 const IPFS = require('ipfs');
 const Room = require('ipfs-pubsub-room');
-const OrbitDB = require('orbit-db');
 var unique = require('array-unique');
 
 const STATES = Object.freeze({
@@ -22,14 +21,15 @@ class Worker extends EventEmitter{
     super();
     this._roomName = roomName;
     this._id = '';
-    this._index = 1; //1 based
-    this._workIndex = 0; 
+    this._index = 0;
     this._peers = [];
+    this._peerToIndex = {};
     this._state = Worker.STATES.GENERATE_WORK_SEQUENCE;
-    this._state_latch = Worker.STATES.GENERATE_WORK_SEQUENCE;
+    this._states =[];
     this._workSequence = [];
-    this._currentWork = 0;
     this._workSequenceLength = 10;
+    this._allCompletedWork = { 0: { currentWork: 0, results:{} } };
+    this._completedWork = {};
 
     this._ipfs = new IPFS({
       //allows us to test using same browser instance, but different windows
@@ -45,48 +45,26 @@ class Worker extends EventEmitter{
         }
       }
     })
-
-    this._ipfs.on('ready', async () => {
-
-      this._ipfs.id((err, info) => {
-        this._id = info.id;
-      })
-
-      this._orbitdb = new OrbitDB(this._ipfs,'./test');
-      const dbConfig = { replicate: true, create: true, sync: true, overwrite: false, write: ['*'], localOnly: false };
-      this._workCompleted = await this._orbitdb.keyvalue(this._roomName,dbConfig);
-      //this._workCompleted = await orbitdb.open('/orbitdb/QmbLUdHKozxBDeKsDKyGEKeLUyi7YhVxiVo7VJMrCPqrvq/Collatz Conjecture',{ sync: true});
-      
-      this._workCompleted.events.on('replicate', (address) => console.log('db - replicate', address ) );
-      this._workCompleted.events.on('replicate.progress', (address) => console.log('db - replicate progress', address) );
-      this._workCompleted.events.on('write', (res) => {console.log(res)});
-      await this._workCompleted.load();
-      console.log('OrbitDB ready with address ' + this._workCompleted.address);
-
-      this.emit('InitCompleted', {'peer':this._id});
-
-      //define pubsub room
-      this._room = Room(this._ipfs, roomName);
-
-      //register events 
-      this._room.on('peer joined', (peer) => this.onPeerJoined(peer));
-      this._room.on('peer left', (peer) => this.onPeerLeft(peer));
-
-      
-      this.mainLoop();
-    })
-
+   
+    //define pubsub room
+    this._room = Room(this._ipfs, roomName);
+    //register events 
+    this._room.on('peer joined', (peer) => this.onPeerJoined(peer));
+    this._room.on('peer left', (peer) => this.onPeerLeft(peer));
+    //this._room.on('message', (message) => this.onMessage(message));
+    this.emit('InitCompleted', {'peer':this._id});
+    
   }
 
   onPeerJoined(peer){
     console.log('peer ' + peer + ' joined')
-    this._state_latch = Worker.STATES.GENERATE_WORK_SEQUENCE;
+    this._states.push(Worker.STATES.GENERATE_WORK_SEQUENCE);
     this.emit('PeerJoined', {'peer':peer});
   }
 
   onPeerLeft(peer){
     console.log('peer ' + peer + ' left')
-    this._state_latch = Worker.STATES.GENERATE_WORK_SEQUENCE;
+    this._states.push(Worker.STATES.GENERATE_WORK_SEQUENCE);
     this.emit('PeerLeft', {'peer':peer});
   }
 
@@ -98,33 +76,66 @@ class Worker extends EventEmitter{
   }
 
   start(){
-    
+    this._ipfs.once('ready', () => this._ipfs.id((err, info) => {
+      if (err) { throw err }
+      this._id = info.id;
+      console.log('IPFS node ready');
+      this.emit('InitCompleted', {'peer':this._id});
+      this._peers[this._id];
+      this.mainLoop();
+    }))
   }
 
   mainLoop(){
 
    setInterval(() => {
-      this._peers = this._room.getPeers();
-      if(this._state == Worker.STATES.GENERATE_WORK_SEQUENCE){
-        this.assignPeerIndexes();
-        this.generateWorkSequence();
-      } 
-      else if(this._state == Worker.STATES.WORK) {
-        this.doWork();
+      if(this.checkForNewPeers()){
+        this.getPeers();
+      }
+      else{
+        if(this._state == Worker.STATES.GENERATE_WORK_SEQUENCE){
+          this.generateWorkSequence();
+          if(this._workSequence.length > 0){
+            this._states.push(Worker.STATES.WORK);
+          }
+        } 
+        else if(this._state == Worker.STATES.WORK) {
+          this.doWork();
+          if(this._workSequence.length == 0){
+            this._states.push(Worker.STATES.GENERATE_WORK_SEQUENCE);
+          }
+        }
       }
       this.updateState();
+
     }, 100)
 
   }
 
-  assignPeerIndexes(){
-    var peers = this._peers;
-    var numPeers = peers.length;
-
+  checkForNewPeers(){
+    var prevPeers = this._peers;
+    var peers = this._room.getPeers();
     peers.push(this._id);
-    peers.sort();
-
-    this._index = peers.indexOf(this._id) + 1;
+    return peers.filter((peer) => !prevPeers.includes(peer)).length > 0;
+  }
+  getPeers(){
+    this._peers = this._room.getPeers();
+    this._peers.push(this._id);
+    this._peers.sort();
+    this._peers.forEach((peer,index)=>{
+      this._peerToIndex[peer] = index;
+      if(peer === this._id){ 
+        this._index = index;
+      }
+      if(!this._allCompletedWork.hasOwnProperty(index)){
+        this._allCompletedWork[index] = {
+            currentWork: this._allCompletedWork[index-1].currentWork + 1,
+            results:{}
+        };
+      }
+    });
+    this._completedWork = this._allCompletedWork[this._index].results;
+    this._states.push(Worker.STATES.GENERATE_WORK_SEQUENCE);
   }
 
   generateWorkSequence(){
@@ -136,33 +147,29 @@ class Worker extends EventEmitter{
 
     var numPeers = this._peers.length;
     var length = this._workSequenceLength;
-    var offset = this._currentWork + this._index;
+    var currentWork = this._allCompletedWork[this._index].currentWork;
+    var offset = currentWork + numPeers + this._index;
     this._workSequence = Array.from(Array(length).keys(), i => numPeers*i + offset);
-
+    console.log("Index: " + this._index + " Current Work: " + currentWork.toString());
+    console.log(this._workSequence);
     //this.emit('WorkSequenceGenerated', {});
   }
 
   doWork(){
     var result = this.calc(this._workSequence.shift());
-    async () => {
-      await this._workCompleted.put(result[0],{iterations:result[1],workIndex:this._workIndex,peer:this._id});
+    var message = this.constructMessage('SUBMIT_WORK',result[0],result[1]);
+    if(this._peers.length == 1){
+      message = {from:this._id,data:message};
+      this.onMessage(message);
     }
-    var peers = [];
-    if(this._peers.length > 0){
-      peers = this._peers;
+    else{
+      this._room.broadcast(message);
     }
-    peers.push(this._id);
-    this._currentWork = result[0];
-    this.emit('CompletedWork', {'peer':this._id,'peers':unique(peers),'work':result[0],'iterations':result[1]});
-    this._workIndex += 1;
   }
 
   updateState(){
-    if(this._workSequence.length > 0){
-      this._state = Worker.STATES.WORK;
-    }
-    else {
-      this._state = Worker.STATES.GENERATE_WORK_SEQUENCE;
+    if(this._states.length > 0){
+      this._state = this._states.shift();
     }
   }
 
@@ -191,6 +198,33 @@ class Worker extends EventEmitter{
       console.log("**Work: " + original.toString() + " Current: " + input.toString() + " Iteration: " + iterations.toString())
     }*/
     return [original,iterations];
+  }
+
+  onMessage(message){
+    var messageData = this.parseMessage(message.data.toString());
+    console.log(messageData);
+    if(messageData.command === 'SUBMIT_WORK'){
+      var currentWork = parseInt(messageData.work);
+      var iter = parseInt(messageData.result);
+      var peerIndex = this._peerToIndex[message.from]
+
+      if(this._allCompletedWork.hasOwnProperty(peerIndex)){
+        //Save the currentWork if it is the latest
+        if(currentWork > this._allCompletedWork[peerIndex].currentWork){
+          this._allCompletedWork[peerIndex].currentWork = currentWork;
+        }
+        //always add the work to the results object
+        this._allCompletedWork[peerIndex].results[currentWork]=iter;
+      }
+      else{
+        this._allCompletedWork[peerIndex] = {
+            currentWork: currentWork,
+            results:{ currentWork:iter }
+        };
+      }
+
+      this.emit('CompletedWork', {'peer':message.from,'peers':unique(this._peers),'work':currentWork,'iterations':iter});
+    }
   }
 
   parseMessage(message){
