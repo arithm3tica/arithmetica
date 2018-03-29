@@ -6,8 +6,8 @@ const Room = require('ipfs-pubsub-room');
 var unique = require('array-unique');
 
 const STATES = Object.freeze({
-  SYNC: Symbol("SYNC"),
   GENERATE_WORK_SEQUENCE: Symbol("GENERATE_WORK_SEQUENCE"),
+  LOAD_WORK: Symbol("LOAD_WORK"),
   WORK: Symbol("WORK")
 });
 
@@ -24,18 +24,23 @@ class Worker extends EventEmitter{
     this._index = 0;
     this._peers = [];
     this._peerToIndex = {};
+    this._peerToHash = {};
     this._state = Worker.STATES.GENERATE_WORK_SEQUENCE;
-    this._states =[];
+    this._states = [];
+    this._work = 0;
     this._workSequence = [];
     this._workSequenceLength = 10;
-    this._allCompletedWork = { 0: { currentWork: 0, results:{} } };
     this._completedWork = {};
+    this._isWorkSaved = false;
+    this._numWorkReceived = 0;
 
     this._ipfs = new IPFS({
       //allows us to test using same browser instance, but different windows
       repo: 'ipfs/arithmetica/' + Math.random(),
       EXPERIMENTAL: {
-        pubsub: true
+        pubsub: true,
+        sharding: true,
+        dht: true
       },
       config: {
         Addresses: {
@@ -44,14 +49,14 @@ class Worker extends EventEmitter{
           ]
         }
       }
-    })
+    });
    
     //define pubsub room
     this._room = Room(this._ipfs, roomName);
     //register events 
     this._room.on('peer joined', (peer) => this.onPeerJoined(peer));
     this._room.on('peer left', (peer) => this.onPeerLeft(peer));
-    //this._room.on('message', (message) => this.onMessage(message));
+    this._room.on('message', (message) => this.onMessage(message));
     this.emit('InitCompleted', {'peer':this._id});
     
   }
@@ -68,11 +73,21 @@ class Worker extends EventEmitter{
     this.emit('PeerLeft', {'peer':peer});
   }
 
-  onMessage(db){
+  onMessage(message){
+    var messageData = this.parseMessage(message.data.toString());
+    if(messageData.command === 'WORK_SAVED'){
+      //var indexes = Object.values(this._peerToIndex);
+      //this._peerToIndex[message.from]=indexes.length;
+      this._peerToHash[message.from] = messageData.data.hash;
+      console.log("Received WORK_SAVED from: " + message.from);
+      console.log("peerToHash: " + JSON.stringify(this._peerToHash));
+      //don't increment if this message is the saving of the initial empty object
+      if(parseInt(messageData.data.work) > 0) {
 
-    console.log('replicated event received');
-    console.log(db);
-    
+        this._numWorkReceived += 1;
+      }
+      console.log("Num work received: " + this._numWorkReceived);
+    }
   }
 
   start(){
@@ -90,17 +105,51 @@ class Worker extends EventEmitter{
 
    setInterval(() => {
       if(this.checkForNewPeers()){
+        console.log("New peer found. Current peer index: " + this._index);
+        //reset the index to hash dict to force us into a waiting state if we don't receive a message in time
+        //this._peerToHash = {};
+        //this._peerToIndex = {};
+        //the appearance of a new peer means that we need to clear the state queue
+        this._states = []; 
         this.getPeers();
+        console.log("New peer index: " + this._index);
+        console.log("peerToIndex: " + JSON.stringify(this._peerToIndex));
+        if(!this._isWorkSaved){
+          console.log("Saving work");
+          this.saveWork(this._work,this._completedWork[this._work]);
+          this._isWorkSaved = true;
+        }
+        if(this._peers.length > 1) this._states.push(Worker.STATES.LOAD_WORK);  //don't need to load work if no peers
+        this._states.push(Worker.STATES.GENERATE_WORK_SEQUENCE);
+        console.log("state queue size: " + this._states.length)
       }
       else{
-        if(this._state == Worker.STATES.GENERATE_WORK_SEQUENCE){
-          this.generateWorkSequence();
-          if(this._workSequence.length > 0){
-            this._states.push(Worker.STATES.WORK);
+        if(this._state == Worker.STATES.LOAD_WORK){
+          console.log("work rcvd / numPeers: " + this._numWorkReceived + "/" + this._peers.length);
+          if(this._numWorkReceived >= this._peers.length){
+            this._numWorkReceived = 0;
+            //this means that we have received the work state from all peers
+            this.loadWork();
+            console.log("work loaded: " + JSON.stringify(this._completedWork));
+            //this._states.push(Worker.STATES.GENERATE_WORK_SEQUENCE);
           }
+          else{
+            console.log("Waiting for work state: " + this._numWorkReceived + "/" + this._peers.length);
+            //put this at the beginning of the array so it ensures the state stays the same
+            this._states.unshift(Worker.STATES.LOAD_WORK);
+          }
+        }
+        else if(this._state == Worker.STATES.GENERATE_WORK_SEQUENCE){
+          console.log("Generating work sequence");
+          this.generateWorkSequence();
+          console.log("Index: " + this._index + " Current Work: " + this._work + " Num Peers: " + this._peers.length);
+          console.log("Work sequence: " + this._workSequence);
+          this._states.push(Worker.STATES.WORK);
         } 
         else if(this._state == Worker.STATES.WORK) {
+          console.log("Starting work at: " + this._work);
           this.doWork();
+          this._isWorkSaved = false;
           if(this._workSequence.length == 0){
             this._states.push(Worker.STATES.GENERATE_WORK_SEQUENCE);
           }
@@ -127,15 +176,7 @@ class Worker extends EventEmitter{
       if(peer === this._id){ 
         this._index = index;
       }
-      if(!this._allCompletedWork.hasOwnProperty(index)){
-        this._allCompletedWork[index] = {
-            currentWork: this._allCompletedWork[index-1].currentWork + 1,
-            results:{}
-        };
-      }
     });
-    this._completedWork = this._allCompletedWork[this._index].results;
-    this._states.push(Worker.STATES.GENERATE_WORK_SEQUENCE);
   }
 
   generateWorkSequence(){
@@ -147,37 +188,13 @@ class Worker extends EventEmitter{
 
     var numPeers = this._peers.length;
     var length = this._workSequenceLength;
-    var currentWork = this._allCompletedWork[this._index].currentWork;
-    var offset = currentWork + numPeers + this._index;
+    var offset = this._work + this._index + 1;
     this._workSequence = Array.from(Array(length).keys(), i => numPeers*i + offset);
-    console.log("Index: " + this._index + " Current Work: " + currentWork.toString());
-    console.log(this._workSequence);
     //this.emit('WorkSequenceGenerated', {});
   }
 
   doWork(){
-    var result = this.calc(this._workSequence.shift());
-    var message = this.constructMessage('SUBMIT_WORK',result[0],result[1]);
-    if(this._peers.length == 1){
-      message = {from:this._id,data:message};
-      this.onMessage(message);
-    }
-    else{
-      this._room.broadcast(message);
-    }
-  }
-
-  updateState(){
-    if(this._states.length > 0){
-      this._state = this._states.shift();
-    }
-  }
-
-    //The problem definition MUST override these.
-  evaluation(inputs) {}
-  assertions(original, number, iterations) {}
-
-  calc(input){
+    var input = this._workSequence.shift();
     var flag = true;
     var iterations = 0;
     var original = input
@@ -190,49 +207,56 @@ class Worker extends EventEmitter{
         //this.store(original, input, iterations, false);
       }
     }
-     //console.log("**Work: " + original.toString() + " Current: " + input.toString() + " Iteration: " + iterations.toString())
-    /*if (!flag){
-      console.log("**Solution already found for Work: " + original.toString() + " Iterations: " + this._workCompleted[input])
-    }
-    else{
-      console.log("**Work: " + original.toString() + " Current: " + input.toString() + " Iteration: " + iterations.toString())
-    }*/
-    return [original,iterations];
+    this._completedWork[original]=iterations;
+    this._work = original;
+    this.emit('CompletedWork', {'peer':this._id,'peers':unique(this._peers),'work':original,'iterations':iterations});
   }
 
-  onMessage(message){
-    var messageData = this.parseMessage(message.data.toString());
-    console.log(messageData);
-    if(messageData.command === 'SUBMIT_WORK'){
-      var currentWork = parseInt(messageData.work);
-      var iter = parseInt(messageData.result);
-      var peerIndex = this._peerToIndex[message.from]
-
-      if(this._allCompletedWork.hasOwnProperty(peerIndex)){
-        //Save the currentWork if it is the latest
-        if(currentWork > this._allCompletedWork[peerIndex].currentWork){
-          this._allCompletedWork[peerIndex].currentWork = currentWork;
-        }
-        //always add the work to the results object
-        this._allCompletedWork[peerIndex].results[currentWork]=iter;
-      }
-      else{
-        this._allCompletedWork[peerIndex] = {
-            currentWork: currentWork,
-            results:{ currentWork:iter }
-        };
-      }
-
-      this.emit('CompletedWork', {'peer':message.from,'peers':unique(this._peers),'work':currentWork,'iterations':iter});
+  updateState(){
+    if(this._states.length > 0){
+      this._state = this._states.shift();
     }
+  }
+
+  //The problem definition MUST override these.
+  evaluation(inputs) {}
+  assertions(original, number, iterations) {}
+
+
+  saveWork(work,result){
+    var path = this._id;
+    var output = JSON.stringify({work:this._work ,completedWork:this._completedWork});  
+    this._ipfs.files.add({path:path,content:Buffer.from(output)}, (err,file) => {
+      console.log('Added file:',file[0].hash);
+      var message = this.constructMessage('WORK_SAVED',{work:this._work,hash:file[0].hash});
+      this._room.broadcast(message);
+    })
+  }
+
+  async loadWork(){
+    for(peer in this._peers) {
+      if( peer !== this._id ){
+        var hash = this._peerToHash[peer];
+        console.log('Loading this hash: ' + hash);
+        var data = await this._ipfs.files.cat(hash);
+        var temp = JSON.parse(data);
+        console.log(temp.completedWork);
+        if(temp.work > this._work){
+          this._work = temp.work;
+        }
+        this._completedWork = Object.assign(this._completedWork,temp.completedWork);
+        console.log("Finished loading");
+      }
+    }
+    return true;
   }
 
   parseMessage(message){
     return JSON.parse(message);
   }
 
-  constructMessage(command, work, result){
-    var message = {'command':command,'work':work,'result':result}
+  constructMessage(command, data){
+    var message = {'command':command,'data':data}
     return JSON.stringify(message);
   }
 }
