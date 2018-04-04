@@ -21,9 +21,8 @@ class Worker extends EventEmitter{
     super();
     this._roomName = roomName;
     this._id = '';
-    this._index = 0;
+    this._index = 1;
     this._peers = [];
-    this._peerToIndex = {};
     this._peerToHash = {};
     this._state = Worker.STATES.GENERATE_WORK_SEQUENCE;
     this._states = [];
@@ -33,14 +32,14 @@ class Worker extends EventEmitter{
     this._completedWork = {};
     this._isWorkSaved = false;
     this._numWorkReceived = 0;
+    this._numWorkLoaded = 0;
+    this._recentWorkSync = false;
 
     this._ipfs = new IPFS({
       //allows us to test using same browser instance, but different windows
       repo: 'ipfs/arithmetica/' + Math.random(),
       EXPERIMENTAL: {
-        pubsub: true,
-        sharding: true,
-        dht: true
+        pubsub: true
       },
       config: {
         Addresses: {
@@ -54,8 +53,8 @@ class Worker extends EventEmitter{
     //define pubsub room
     this._room = Room(this._ipfs, roomName);
     //register events 
-    this._room.on('peer joined', (peer) => this.onPeerJoined(peer));
-    this._room.on('peer left', (peer) => this.onPeerLeft(peer));
+    //this._room.on('peer joined', (peer) => this.onPeerJoined(peer));
+    //this._room.on('peer left', (peer) => this.onPeerLeft(peer));
     this._room.on('message', (message) => this.onMessage(message));
     this.emit('InitCompleted', {'peer':this._id});
     
@@ -69,6 +68,7 @@ class Worker extends EventEmitter{
 
   onPeerLeft(peer){
     console.log('peer ' + peer + ' left')
+    delete this._peerToHash[peer];
     this._states.push(Worker.STATES.GENERATE_WORK_SEQUENCE);
     this.emit('PeerLeft', {'peer':peer});
   }
@@ -76,17 +76,19 @@ class Worker extends EventEmitter{
   onMessage(message){
     var messageData = this.parseMessage(message.data.toString());
     if(messageData.command === 'WORK_SAVED'){
-      //var indexes = Object.values(this._peerToIndex);
-      //this._peerToIndex[message.from]=indexes.length;
+
       this._peerToHash[message.from] = messageData.data.hash;
       console.log("Received WORK_SAVED from: " + message.from);
       console.log("peerToHash: " + JSON.stringify(this._peerToHash));
-      //don't increment if this message is the saving of the initial empty object
-      if(parseInt(messageData.data.work) > 0) {
 
-        this._numWorkReceived += 1;
-      }
-      console.log("Num work received: " + this._numWorkReceived);
+        //the problem is that we sometimes receive multiple messages from the same worker.  this 
+        // allows us to erroneously increment this counter to a value that triggers us to begin 
+        //loading the work before we have received messages from all workers.
+
+      console.log("Num work received: " + Object.keys(this._peerToHash).length);
+    }
+    else if(messageData.command === 'WORK_COMPLETED'){
+
     }
   }
 
@@ -105,15 +107,14 @@ class Worker extends EventEmitter{
 
    setInterval(() => {
       if(this.checkForNewPeers()){
-        console.log("New peer found. Current peer index: " + this._index);
+        console.log("Current peer index: " + this._index);
         //reset the index to hash dict to force us into a waiting state if we don't receive a message in time
-        //this._peerToHash = {};
-        //this._peerToIndex = {};
+        this._allWorkReceived = false;
         //the appearance of a new peer means that we need to clear the state queue
         this._states = []; 
         this.getPeers();
+        console.log(this._peers);
         console.log("New peer index: " + this._index);
-        console.log("peerToIndex: " + JSON.stringify(this._peerToIndex));
         if(!this._isWorkSaved){
           console.log("Saving work");
           this.saveWork(this._work,this._completedWork[this._work]);
@@ -125,30 +126,43 @@ class Worker extends EventEmitter{
       }
       else{
         if(this._state == Worker.STATES.LOAD_WORK){
-          console.log("work rcvd / numPeers: " + this._numWorkReceived + "/" + this._peers.length);
-          if(this._numWorkReceived >= this._peers.length){
-            this._numWorkReceived = 0;
+          if(!this._allWorkReceived && Object.keys(this._peerToHash).length >= this._peers.length){
+            this._allWorkReceived = true;
             //this means that we have received the work state from all peers
             this.loadWork();
-            console.log("work loaded: " + JSON.stringify(this._completedWork));
+            this._states.unshift(Worker.STATES.LOAD_WORK);
             //this._states.push(Worker.STATES.GENERATE_WORK_SEQUENCE);
           }
           else{
-            console.log("Waiting for work state: " + this._numWorkReceived + "/" + this._peers.length);
-            //put this at the beginning of the array so it ensures the state stays the same
-            this._states.unshift(Worker.STATES.LOAD_WORK);
+            
+            if(this._numWorkLoaded >= this._peers.length-1){
+              let state;
+              while(state != Worker.STATES.GENERATE_WORK_SEQUENCE){
+                state = this._states.pop();
+              }
+              this._states.unshift(Worker.STATES.GENERATE_WORK_SEQUENCE);
+              console.log("ALL WORK IS LOADED");
+              this._numWorkLoaded = 0
+              console.log(this._work);
+              this._recentWorkSync = true;
+            }
+            else{
+              console.log("Waiting...");
+              //put this at the beginning of the array so it ensures the state stays the same
+              this._states.unshift(Worker.STATES.LOAD_WORK);
+            }
           }
         }
         else if(this._state == Worker.STATES.GENERATE_WORK_SEQUENCE){
-          console.log("Generating work sequence");
+          //console.log("Generating work sequence");
           this.generateWorkSequence();
-          console.log("Index: " + this._index + " Current Work: " + this._work + " Num Peers: " + this._peers.length);
-          console.log("Work sequence: " + this._workSequence);
+          //console.log("Work sequence: " + this._workSequence);
           this._states.push(Worker.STATES.WORK);
+          this._recentWorkSync = false;
         } 
         else if(this._state == Worker.STATES.WORK) {
-          console.log("Starting work at: " + this._work);
           this.doWork();
+          //console.log("Completed work: " + this._work);
           this._isWorkSaved = false;
           if(this._workSequence.length == 0){
             this._states.push(Worker.STATES.GENERATE_WORK_SEQUENCE);
@@ -165,16 +179,23 @@ class Worker extends EventEmitter{
     var prevPeers = this._peers;
     var peers = this._room.getPeers();
     peers.push(this._id);
-    return peers.filter((peer) => !prevPeers.includes(peer)).length > 0;
+
+    var peersLeft = prevPeers.filter((peer) => !peers.includes(peer));
+    peersLeft.forEach(peer => this.onPeerLeft(peer));
+
+    var peersJoined = peers.filter((peer) => !prevPeers.includes(peer));
+    peersJoined.forEach(peer => this.onPeerJoined(peer));
+
+    return (peersJoined.length > 0 || peersLeft.length > 0);
   }
+
   getPeers(){
     this._peers = this._room.getPeers();
     this._peers.push(this._id);
     this._peers.sort();
     this._peers.forEach((peer,index)=>{
-      this._peerToIndex[peer] = index;
       if(peer === this._id){ 
-        this._index = index;
+        this._index = index + 1;
       }
     });
   }
@@ -188,7 +209,14 @@ class Worker extends EventEmitter{
 
     var numPeers = this._peers.length;
     var length = this._workSequenceLength;
-    var offset = this._work + this._index + 1;
+    var offset = 0;
+
+    if(this._recentWorkSync){
+      offset = this._work + this._index;
+    }
+    else{
+      offset = this._work + numPeers;
+    }
     this._workSequence = Array.from(Array(length).keys(), i => numPeers*i + offset);
     //this.emit('WorkSequenceGenerated', {});
   }
@@ -233,22 +261,27 @@ class Worker extends EventEmitter{
     })
   }
 
-  async loadWork(){
-    for(peer in this._peers) {
+  loadWork(){
+    for(let peer of this._peers) {
       if( peer !== this._id ){
         var hash = this._peerToHash[peer];
-        console.log('Loading this hash: ' + hash);
-        var data = await this._ipfs.files.cat(hash);
-        var temp = JSON.parse(data);
-        console.log(temp.completedWork);
-        if(temp.work > this._work){
-          this._work = temp.work;
+        if(hash !== 'undefined'){
+          console.log('Loading this hash: ' + hash);
+          this._ipfs.files.cat(hash,(err,data)=>{
+            var temp = JSON.parse(data);
+            console.log(temp.work);
+            if(parseInt(temp.work) > this._work){
+              this._work = temp.work;
+            }
+            this._completedWork = Object.assign(this._completedWork,temp.completedWork);
+            this._numWorkLoaded += 1;
+          });
         }
-        this._completedWork = Object.assign(this._completedWork,temp.completedWork);
-        console.log("Finished loading");
+        else{
+          console.log('ERROR: hash does not exist for worker!')
+        }
       }
     }
-    return true;
   }
 
   parseMessage(message){
