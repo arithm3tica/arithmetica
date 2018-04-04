@@ -34,6 +34,7 @@ class Worker extends EventEmitter{
     this._numWorkReceived = 0;
     this._numWorkLoaded = 0;
     this._recentWorkSync = false;
+    this._workSavedQueue = [];
 
     this._ipfs = new IPFS({
       //allows us to test using same browser instance, but different windows
@@ -68,7 +69,6 @@ class Worker extends EventEmitter{
 
   onPeerLeft(peer){
     console.log('peer ' + peer + ' left')
-    delete this._peerToHash[peer];
     this._states.push(Worker.STATES.GENERATE_WORK_SEQUENCE);
     this.emit('PeerLeft', {'peer':peer});
   }
@@ -76,16 +76,7 @@ class Worker extends EventEmitter{
   onMessage(message){
     var messageData = this.parseMessage(message.data.toString());
     if(messageData.command === 'WORK_SAVED'){
-
-      this._peerToHash[message.from] = messageData.data.hash;
-      console.log("Received WORK_SAVED from: " + message.from);
-      console.log("peerToHash: " + JSON.stringify(this._peerToHash));
-
-        //the problem is that we sometimes receive multiple messages from the same worker.  this 
-        // allows us to erroneously increment this counter to a value that triggers us to begin 
-        //loading the work before we have received messages from all workers.
-
-      console.log("Num work received: " + Object.keys(this._peerToHash).length);
+      this._workSavedQueue.push({from:message.from,hash:messageData.data.hash});
     }
     else if(messageData.command === 'WORK_COMPLETED'){
 
@@ -108,10 +99,11 @@ class Worker extends EventEmitter{
    setInterval(() => {
       if(this.checkForNewPeers()){
         console.log("Current peer index: " + this._index);
-        //reset the index to hash dict to force us into a waiting state if we don't receive a message in time
+        //the appearance of a new peer means that we need to reset all the state vars
         this._allWorkReceived = false;
-        //the appearance of a new peer means that we need to clear the state queue
+        this._isWorkSaved = false;
         this._states = []; 
+        this._peerToHash = {};
         this.getPeers();
         console.log("New peer index: " + this._index);
         if(!this._isWorkSaved){
@@ -119,7 +111,9 @@ class Worker extends EventEmitter{
           this.saveWork(this._work,this._completedWork[this._work]);
           this._isWorkSaved = true;
         }
-        if(this._peers.length > 1) this._states.push(Worker.STATES.LOAD_WORK);  //don't need to load work if no peers
+        if(this._peers.length > 1){
+          this._states.push(Worker.STATES.LOAD_WORK);  //don't need to load work if no peers
+        }
         this._states.push(Worker.STATES.GENERATE_WORK_SEQUENCE);
       }
       else{
@@ -131,16 +125,22 @@ class Worker extends EventEmitter{
             this._states.unshift(Worker.STATES.LOAD_WORK);
           }
           else{
-            
+            //process all the work saved messages
+            while(this._workSavedQueue.length > 0){
+              var message = this._workSavedQueue.shift();
+              this._peerToHash[message.from] = message.hash;
+              console.log("Received WORK_SAVED from: " + message.from);
+              console.log("peerToHash: " + JSON.stringify(this._peerToHash));
+              console.log("Num work received: " + Object.keys(this._peerToHash).length);
+            }
             if(this._numWorkLoaded >= this._peers.length-1){
               let state;
               while(state != Worker.STATES.GENERATE_WORK_SEQUENCE){
                 state = this._states.pop();
               }
               this._states.unshift(Worker.STATES.GENERATE_WORK_SEQUENCE);
-              console.log("ALL WORK IS LOADED");
+              console.log("ALL WORK IS LOADED: " + this._work);
               this._numWorkLoaded = 0
-              console.log(this._work);
               this._recentWorkSync = true;
             }
             else{
@@ -266,7 +266,8 @@ class Worker extends EventEmitter{
           this._ipfs.files.cat(hash,(err,data)=>{
             var temp = JSON.parse(data);
             if(parseInt(temp.work) > this._work){
-              this._work = temp.work;
+              console.log(parseInt(temp.work) + " > " + this._work);
+              this._work = parseInt(temp.work);
             }
             this._completedWork = Object.assign(this._completedWork,temp.completedWork);
             this._numWorkLoaded += 1;
