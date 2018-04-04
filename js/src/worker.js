@@ -263,10 +263,8 @@ class Worker extends EventEmitter{
       if( peer !== this._id ){
         var hash = this._peerToHash[peer];
         if(hash !== 'undefined'){
-          console.log('Loading this hash: ' + hash);
           this._ipfs.files.cat(hash,(err,data)=>{
             var temp = JSON.parse(data);
-            console.log(temp.work);
             if(parseInt(temp.work) > this._work){
               this._work = temp.work;
             }
