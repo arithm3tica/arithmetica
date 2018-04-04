@@ -113,7 +113,6 @@ class Worker extends EventEmitter{
         //the appearance of a new peer means that we need to clear the state queue
         this._states = []; 
         this.getPeers();
-        console.log(this._peers);
         console.log("New peer index: " + this._index);
         if(!this._isWorkSaved){
           console.log("Saving work");
@@ -122,7 +121,6 @@ class Worker extends EventEmitter{
         }
         if(this._peers.length > 1) this._states.push(Worker.STATES.LOAD_WORK);  //don't need to load work if no peers
         this._states.push(Worker.STATES.GENERATE_WORK_SEQUENCE);
-        console.log("state queue size: " + this._states.length)
       }
       else{
         if(this._state == Worker.STATES.LOAD_WORK){
@@ -131,7 +129,6 @@ class Worker extends EventEmitter{
             //this means that we have received the work state from all peers
             this.loadWork();
             this._states.unshift(Worker.STATES.LOAD_WORK);
-            //this._states.push(Worker.STATES.GENERATE_WORK_SEQUENCE);
           }
           else{
             

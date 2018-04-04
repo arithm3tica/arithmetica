@@ -233,8 +233,10 @@ function deleteTableObject(workerId) {
   var index = participantTable.findIndex((element) => {
       return element.id == workerId;
   });
-  participantTable = participantTable.splice(index,1);
-  rebuildTbody();
+  if(index !== -1){
+    participantTable.splice(index,1);
+    rebuildTbody();
+  }
 }
 
 function rebuildTbody() {
