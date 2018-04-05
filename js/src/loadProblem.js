@@ -16,7 +16,10 @@ module.exports = function handleLoadProblemClicked(arithmeticaContract,problemNa
         (Problem) => {return new Problem();}
     ).then(
         (worker) => {
-             worker.on('InitCompleted',(data) => {
+            
+            window.addEventListener("beforeunload", () => worker.stop());
+
+            worker.on('InitCompleted',(data) => {
                 callback('InitCompleted',data);
             });           
             worker.on('PeerJoined',(data) => {
