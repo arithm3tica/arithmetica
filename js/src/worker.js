@@ -33,7 +33,7 @@ class Worker extends EventEmitter{
     this._states = [];
     this._work = 0;
     this._workSequence = [];
-    this._workSequenceLength = 1000;
+    this._workSequenceLength = 100;
     this._completedWork = {};
     this._numWorkReceived = 0;
     this._numWorkLoaded = 0;
@@ -198,9 +198,9 @@ class Worker extends EventEmitter{
         }
       }
       else if(this._state == Worker.STATES.GENERATE_WORK_SEQUENCE){
-        //console.log("***GENERATE_WORK_SEQUENCE***");
+        console.log("***GENERATE_WORK_SEQUENCE***");
         this.generateWorkSequence();
-        //console.log("   Work sequence: " + this._workSequence);
+        console.log("   Work sequence: " + this._workSequence);
         this._states.push(Worker.STATES.WORK);
       } 
       else if(this._state == Worker.STATES.WORK) {
@@ -258,18 +258,37 @@ class Worker extends EventEmitter{
     //Let i = sequence index
     //Let offset = W(N,0) + N
     //W(N,i) = Num(Peers)*i + offset
-
-    var numPeers = this._peers.length;
-    var length = this._workSequenceLength;
+    var numPeers = this._peers.length; 
+    var start = this._work;
+    this._workSequence = [];
+    var length = this._workSequenceLength - this._workSequence.length;
     var offset = 0;
 
     if(this._prevState == Worker.STATES.WORK){
-      offset = this._work + numPeers;
+      offset = start + numPeers;
     }
     else{
-      offset = this._work + this._index;
+      //when a new epoch begins, we check the completed work structure
+      //for skipped work and add it to the work sequence
+      //create a list: [1,...,N]
+      var prevWork = Array.from(Array(this._work).keys(),i=>i+1);
+      //create a list of work not found in completed work
+      var incompleteWork = prevWork.filter((element)=>{
+        return !this._completedWork.hasOwnProperty(element);
+      });
+      console.log("   Incomplete Work: " + incompleteWork);
+      //divide the incomplete work among the peers, based on peer's index
+      incompleteWork.forEach((element,index) => {
+        if(index+1 === this._index + numPeers*this._workSequence.length){
+          this._workSequence.push(element);
+        }
+        if(element > start) start = element;
+      });
+      console.log("   Assigned Incomplete Work: " + this._workSequence);
+      offset = start + this._index;
     }
-    this._workSequence = Array.from(Array(length).keys(), i => numPeers*i + offset);
+    //any remaining room in the work sequence is filled with the new work
+    this._workSequence.push(...Array.from(Array(length).keys(), i => numPeers*i + offset));
   }
 
   doWork(){
@@ -370,7 +389,7 @@ class Worker extends EventEmitter{
             if(err){console.log(err)}
             var temp = JSON.parse(data);
             if(parseInt(temp.work) > this._work){
-              console.log(parseInt(temp.work) + " > " + this._work);
+              console.log("   " + parseInt(temp.work) + " > " + this._work);
               this._work = parseInt(temp.work);
             }
             this._completedWork = Object.assign(this._completedWork,temp.completedWork);
@@ -379,7 +398,7 @@ class Worker extends EventEmitter{
           });
         }
         else{
-          console.log('   ERROR: hash does not exist for worker!')
+          console.log("   ERROR: hash does not exist for worker!")
         }
       }
     }
