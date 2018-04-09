@@ -1,7 +1,9 @@
 var steps = -1;
 var totalSubmissions = 0;
+var totalWorkLoaded = 0;
+var avgWorkLoaded = 0;
+var workLoaded = [];
 var rebuildTable = false;
-var leadPeer = '';
 var id = '';
 
 var submissionsContainer = document.getElementById('submissionsChart');
@@ -129,14 +131,28 @@ function workerEvent(eventName, data){
         updateTableObject(data.peer, data.work);
       }
   }
+  else if (eventName == 'WorkLoaded'){
+      if(id !== data.peer){
+        totalWorkLoaded += 100;
+        updateTableObject(data.peer, data.work);
+      }
+      else{
+        iterationsData = [];
+        for (var i=1;i<data.work;i++){
+          if(data.completedWork.hasOwnProperty(i)){
+            iterationsData.push({x:i,y:data.completedWork[i]});
+          }
+        }
+        //iterationsDataset.clear();
+        iterationsDataset.update(iterationsData);
+        iterationsData = [];
+    }
+  }
   else if (eventName == 'PeerJoined'){
       addTableObject(data.peer, 0);
   }
   else if (eventName == 'PeerLeft'){
       deleteTableObject(data.peer);
-  }
-  else if (eventName == 'LeadPeerSelected'){
-      leadPeer = data.peer;
   }
   else if (eventName == 'InitCompleted'){
       id = data.peer;
@@ -147,6 +163,16 @@ function workerEvent(eventName, data){
 
 setInterval(() => {
   steps++;
+  
+  workLoaded.push(totalWorkLoaded);
+  if(workLoaded.length > 20){
+    workLoaded.shift();
+  }
+  var sum = workLoaded.reduce((a,b)=>{return a + b;})
+  avgWorkLoaded = sum / workLoaded.length;
+  totalWorkLoaded = 0;
+  //console.log(avgWorkLoaded);
+  //console.log(workLoaded);
   var submissionItemToDelete = 0;
   if(submissionsDataset.length > 50){
     //only show 50 secs worth of submission rate data on chart
@@ -160,12 +186,13 @@ setInterval(() => {
 
   }
 
-  submissionsData.push({x:steps,y:totalSubmissions});  
+  submissionsData.push({x:steps,y:totalSubmissions+avgWorkLoaded});  
   //submissionsChart.setItems(submissionsData);
   submissionsDataset.add(submissionsData);  
   //submissionsChart.fit();
   submissionsData = [];
   totalSubmissions = 0;
+  avgWorkLoaded = 0;
   var max = iterationsDataset.max('x');
   if(max !== null && max.x > xIterationsMax){
     xIterationsMax += xIterationsMax; 
@@ -247,13 +274,8 @@ function generateTbodyString() {
   let innerHTML = "";
   let myHTML = "";
   let counter = 1;
+  let role = "Worker";
   for(let party of participantTable) {
-      if(party.id === leadPeer){
-        role = 'Leader'
-      }
-      else{
-        role = 'Worker'
-      }
 
       if(party.id !== id){
         innerHTML = innerHTML + "<tr> <th scope=\\\"row\\\"> Peer " + counter + "</th><td>" + party.id + "</td><td>" + role + "</td><td>" + party.count + "</td></tr>";

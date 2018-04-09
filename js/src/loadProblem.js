@@ -31,8 +31,8 @@ module.exports = function handleLoadProblemClicked(arithmeticaContract,problemNa
             worker.on('CompletedWork',(data) => {
                 callback('CompletedWork',data);
             });
-            worker.on('LeadPeerSelected',(data) => {
-                callback('LeadPeerSelected',data);
+            worker.on('WorkLoaded',(data) => {
+                callback('WorkLoaded',data);
             });
             worker.start();
 
