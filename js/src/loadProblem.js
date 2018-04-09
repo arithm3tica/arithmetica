@@ -16,7 +16,10 @@ module.exports = function handleLoadProblemClicked(arithmeticaContract,problemNa
         (Problem) => {return new Problem();}
     ).then(
         (worker) => {
-             worker.on('InitCompleted',(data) => {
+            
+            window.addEventListener("beforeunload", () => worker.stop());
+
+            worker.on('InitCompleted',(data) => {
                 callback('InitCompleted',data);
             });           
             worker.on('PeerJoined',(data) => {
@@ -28,8 +31,8 @@ module.exports = function handleLoadProblemClicked(arithmeticaContract,problemNa
             worker.on('CompletedWork',(data) => {
                 callback('CompletedWork',data);
             });
-            worker.on('LeadPeerSelected',(data) => {
-                callback('LeadPeerSelected',data);
+            worker.on('WorkLoaded',(data) => {
+                callback('WorkLoaded',data);
             });
             worker.start();
 
@@ -39,6 +42,6 @@ module.exports = function handleLoadProblemClicked(arithmeticaContract,problemNa
 }
 
 function buildCode(_code, problemName) {
-
+    problemName += 1;
     return "class Problem extends Worker { constructor(){ super(\'" + problemName + "\'); }" + _code + "} module.exports = Problem;"
 }
