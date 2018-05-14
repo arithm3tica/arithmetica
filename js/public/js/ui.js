@@ -118,17 +118,21 @@ var iterationsChartOptions = {
 var iterationsData = [];
 var iterationsDataset = new vis.DataSet(iterationsData,{});
 var iterationsChart = new vis.Graph2d(iterationsContainer, iterationsDataset, iterationsChartOptions);
+var latestHash = '';
+var updateTable = false;
 
 function workerEvent(eventName, data){
   if(eventName == 'CompletedWork'){
       totalSubmissions += 1;
+      latestHash = data.hash;
       iterationsData.push({x:data.work,y:data.iterations});
       if(rebuildTable){
         buildTable(data);
         rebuildTable = false;
       }
-      else{
+      if(updateTable){
         updateTableObject(data.peer, data.work);
+        updateTable = false;
       }
   }
   else if (eventName == 'WorkLoaded'){
@@ -163,7 +167,8 @@ function workerEvent(eventName, data){
 
 setInterval(() => {
   steps++;
-  
+  updateLinktoLatestData();
+
   workLoaded.push(totalWorkLoaded);
   if(workLoaded.length > 20){
     workLoaded.shift();
@@ -193,19 +198,20 @@ setInterval(() => {
   submissionsData = [];
   totalSubmissions = 0;
   avgWorkLoaded = 0;
-  var max = iterationsDataset.max('x');
-  if(max !== null && max.x > xIterationsMax){
-    xIterationsMax += xIterationsMax; 
-    iterationsChart.setWindow(0,xIterationsMax);
+  if(iterationsDataset.length < 5000){
+    var max = iterationsDataset.max('x');
+    if(max !== null && max.x > xIterationsMax){
+      xIterationsMax += xIterationsMax; 
+      iterationsChart.setWindow(0,xIterationsMax);
+    }
+    iterationsDataset.add(iterationsData)
+    iterationsData = [];
   }
-  //iterationsChart.setItems(iterationsData);
-  iterationsDataset.add(iterationsData)
-  iterationsData = [];
-  //iterationsChart.fit();
 
   if(steps % 10 == 0){
     rebuildTable = true;
   }
+  updateTable = true;
 }, 1000)
 
 var participantTable = [];
@@ -274,18 +280,25 @@ function generateTbodyString() {
   let innerHTML = "";
   let myHTML = "";
   let counter = 1;
-  let role = "Worker";
+  let link = "-";
   for(let party of participantTable) {
 
       if(party.id !== id){
-        innerHTML = innerHTML + "<tr> <th scope=\\\"row\\\"> Peer " + counter + "</th><td>" + party.id + "</td><td>" + role + "</td><td>" + party.count + "</td></tr>";
+        innerHTML = innerHTML + "<tr> <th scope=\\\"row\\\"> Peer " + counter + "</th><td>" + party.id + "</td><td>" + link + "</td><td>" + party.count + "</td></tr>";
         counter++;
       }
       else {
-        myHTML = "<tr> <th scope=\\\"row\\\"> Me </th><td>" + party.id + "</td><td>" + role + "</td><td>" + party.count + "</td></tr>";
+        if(latestHash.length > 0){
+          link = "<a id='latestData' href='https://ipfs.io/ipfs/"+latestHash+"' target='_blank'>here</a>"
+        }
+        myHTML = "<tr> <th scope=\\\"row\\\"> Me </th><td>" + party.id + "</td><td>" + link + "</td><td>" + party.count + "</td></tr>";
       }
   }
   innerHTML = myHTML + innerHTML;
   return innerHTML;
+}
+
+function updateLinktoLatestData(){
+  $("#latestData").attr("href","https://ipfs.io/ipfs/" + latestHash);
 }
 
