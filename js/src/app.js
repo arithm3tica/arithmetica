@@ -123,7 +123,12 @@ function getProblems() {
     ).then(
         (count) => {
             for(var i = 0; i < count; ++i) {
-                promises.push(instance.getProblemName(i).then((result)=>{problems.push(result);}));
+                promises.push(instance.getProblemName(i).then((result)=>{
+                    //TODO remove this when contract properly deletes problems
+                    if(result !== "Plus One"){
+                        problems.push(result);
+                    }
+                }));
             }
         }
     ).then(
