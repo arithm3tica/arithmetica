@@ -45,6 +45,7 @@ contract Arithmetica {
         require(msg.sender==mathProblems[name].owner);
 
         mathProblems[name] = MathTemplate(0x0,"","",0x0,"");
+        //TODO:  need to remove problem from problem array too
     }
 
     //////////////////////////////////////////////////////////////////////////////////
