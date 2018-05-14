@@ -284,6 +284,7 @@ function generateTbodyString() {
   for(let party of participantTable) {
 
       if(party.id !== id){
+        link = "-";
         innerHTML = innerHTML + "<tr> <th scope=\\\"row\\\"> Peer " + counter + "</th><td>" + party.id + "</td><td>" + link + "</td><td>" + party.count + "</td></tr>";
         counter++;
       }
