@@ -46,6 +46,7 @@ class Worker extends EventEmitter{
     this._epoch = 0;
     this._broadcastWork = false;
 
+    //if signalling server is down check the url https://ws-star-signal-2.servep2p.com/ in chrome
     this._ipfs = new IPFS({
       //allows us to test using same browser instance, but different windows
       repo: 'ipfs/arithmetica/' + Math.random(),
@@ -55,7 +56,9 @@ class Worker extends EventEmitter{
       config: {
         Addresses: {
           Swarm: [
-            '/dns4/ws-star.discovery.libp2p.io/tcp/443/wss/p2p-websocket-star'
+            '/dns4/ws-star-signal-2.servep2p.com/tcp/443/wss/p2p-websocket-star',
+            '/dns4/ws-star-signal-1.servep2p.com/tcp/443/wss/p2p-websocket-star',
+            '/dns4/ws-star.discovery.libp2p.io/tcp/443/wss/p2p-websocket-star',
           ]
         }
       }
@@ -330,7 +333,7 @@ class Worker extends EventEmitter{
     }
     this._completedWork[original]=iterations;
     this._work = original;
-    this.emit('CompletedWork', {'peer':this._id,'peers':unique(this._peers),'work':original,'iterations':iterations});
+    this.emit('CompletedWork', {'peer':this._id,'peers':unique(this._peers),'work':original,'iterations':iterations,'hash':this._peerToHash[this._id]});
   }
 
   updateState(){
