@@ -4,11 +4,11 @@ var Web3 = require('web3');
 var contract = require('truffle-contract');
 var web3Type = "";
 
-if (typeof web3 !== 'undefined') {
+if (typeof window.web3 !== 'undefined') {
   // This user has MetaMask, or another Web3 browser installed!
     web3Type = "MetaMask/Mist";
-    web3Provider = web3.currentProvider;
-    window.web3 = web3;
+    web3Provider = window.web3.currentProvider;
+    window.web3 = window.web3;
 }
 else
 {
