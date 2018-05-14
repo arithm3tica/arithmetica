@@ -288,7 +288,7 @@ function generateTbodyString() {
         counter++;
       }
       else {
-        if(latestHash.length > 0){
+        if(latestHash !== undefined && latestHash.length > 0){
           link = "<a id='latestData' href='https://ipfs.io/ipfs/"+latestHash+"' target='_blank'>here</a>"
         }
         myHTML = "<tr> <th scope=\\\"row\\\"> Me </th><td>" + party.id + "</td><td>" + link + "</td><td>" + party.count + "</td></tr>";
