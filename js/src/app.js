@@ -8,7 +8,6 @@ if (typeof window.web3 !== 'undefined') {
   // This user has MetaMask, or another Web3 browser installed!
     web3Type = "MetaMask/Mist";
     web3Provider = window.web3.currentProvider;
-    window.web3 = window.web3;
 }
 else
 {
@@ -49,8 +48,9 @@ document.addEventListener("DOMContentLoaded", function() {
     evaluationEditor = setupEditor("evaluation-input");
     assertionEditor = setupEditor("assertion-input");
     document.getElementById("submit-problem").addEventListener("click", () => {
-        handleCreateProblemClicked(arithmeticaContract, evaluationEditor, assertionEditor)}
-    );
+        //handleCreateProblemClicked(arithmeticaContract, evaluationEditor, assertionEditor)
+        deleteProblem();
+    });
     document.getElementById("add-problem-button").addEventListener("click", () => {
         switchToAdd();}
     );
@@ -133,6 +133,15 @@ function getProblems() {
         }
     ).then(
         () => {return Promise.all(promises).then(() => {return problems;});}
+    );
+}
+
+function deleteProblem(){
+    arithmeticaContract.deployed().then(
+        (instance) => {
+            var _name = document.getElementById("problem-name").value;
+            instance.deleteProblem(_name, {from: window.web3.eth.defaultAccount});
+        }
     );
 }
 
