@@ -125,7 +125,9 @@ function workerEvent(eventName, data){
   if(eventName == 'CompletedWork'){
       totalSubmissions += 1;
       latestHash = data.hash;
-      iterationsData.push({x:data.work,y:data.iterations});
+      if(iterationsDataset.length < 1500){
+        iterationsData.push({x:data.work,y:data.iterations});
+      }
       if(rebuildTable){
         buildTable(data);
         rebuildTable = false;
@@ -141,15 +143,17 @@ function workerEvent(eventName, data){
         updateTableObject(data.peer, data.work);
       }
       else{
-        iterationsData = [];
-        for (var i=1;i<data.work;i++){
-          if(data.completedWork.hasOwnProperty(i)){
-            iterationsData.push({x:i,y:data.completedWork[i]});
+        if(iterationsDataset.length < 1500){
+          iterationsData = [];
+          for (var i=1;i<data.work;i++){
+            if(data.completedWork.hasOwnProperty(i)){
+              iterationsData.push({x:i,y:data.completedWork[i]});
+            }
           }
+          //iterationsDataset.clear();
+          iterationsDataset.update(iterationsData);
+          iterationsData = [];
         }
-        //iterationsDataset.clear();
-        iterationsDataset.update(iterationsData);
-        iterationsData = [];
     }
   }
   else if (eventName == 'PeerJoined'){
@@ -198,15 +202,15 @@ setInterval(() => {
   submissionsData = [];
   totalSubmissions = 0;
   avgWorkLoaded = 0;
-  if(iterationsDataset.length < 5000){
+  if(iterationsDataset.length < 1500){
     var max = iterationsDataset.max('x');
     if(max !== null && max.x > xIterationsMax){
       xIterationsMax += xIterationsMax; 
       iterationsChart.setWindow(0,xIterationsMax);
     }
     iterationsDataset.add(iterationsData)
-    iterationsData = [];
   }
+  iterationsData = [];
 
   if(steps % 10 == 0){
     rebuildTable = true;
