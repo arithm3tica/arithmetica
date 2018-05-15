@@ -177,9 +177,7 @@ class Worker extends EventEmitter{
 
       }
       else if(this._state == Worker.STATES.LOAD_WORK){
-        if(this._prevState == Worker.STATES.RECEIVE_WORK){
-          console.log("***LOAD_WORK***");
-          let afterLoad = (err,data) => {
+        let afterLoad = (err,data) => {
             if(err){console.log(err)}
             if(parseInt(data.work) > this._work){
               console.log("   " + parseInt(data.work) + " > " + this._work);
@@ -188,7 +186,9 @@ class Worker extends EventEmitter{
             this._completedWork = Object.assign(this._completedWork,data.completedWork);
             this._numWorkLoaded += 1;
             console.log("   numWorkLoaded: " + this._numWorkLoaded);
-          };
+        };
+        if(this._prevState == Worker.STATES.RECEIVE_WORK){
+          console.log("***LOAD_WORK***");
           this.loadWork(afterLoad);
           this._states.unshift(Worker.STATES.LOAD_WORK);
         }
@@ -205,6 +205,7 @@ class Worker extends EventEmitter{
         }
         else{
             console.log("   Waiting on NumWorkLoaded: " + this._numWorkLoaded + " NumPeers: " + this._peers.length);
+            this.loadWork(afterLoad);
             //put this at the beginning of the array so it ensures the state stays the same
             this._states.unshift(Worker.STATES.LOAD_WORK);
         }
