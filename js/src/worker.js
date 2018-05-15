@@ -177,8 +177,7 @@ class Worker extends EventEmitter{
 
       }
       else if(this._state == Worker.STATES.LOAD_WORK){
-        let afterLoad = (err,data) => {
-            if(err){console.log(err)}
+        let afterLoad = (data) => {
             if(parseInt(data.work) > this._work){
               console.log("   " + parseInt(data.work) + " > " + this._work);
               this._work = parseInt(data.work);
@@ -205,7 +204,7 @@ class Worker extends EventEmitter{
         }
         else{
             console.log("   Waiting on NumWorkLoaded: " + this._numWorkLoaded + " NumPeers: " + this._peers.length);
-            this.loadWork(afterLoad);
+            
             //put this at the beginning of the array so it ensures the state stays the same
             this._states.unshift(Worker.STATES.LOAD_WORK);
         }
@@ -222,8 +221,7 @@ class Worker extends EventEmitter{
         //}
         this.doWork();
         this.processWorkSaved();
-        let afterLoad = (err,data) => {
-          if(err){console.log(err)}
+        let afterLoad = (data) => {
           this._completedWork = Object.assign(this._completedWork,data.completedWork);
           this.emit('WorkLoaded',{peer:data.peer,work:data.work, completedWork:this._completedWork});
           console.log("   Finished loading saved work." );
@@ -364,15 +362,20 @@ class Worker extends EventEmitter{
         console.log("   Received WORK_SAVED from: " + message.peer);
       }
       else if(message.requestID == this._peerToRequest[message.peer].requestID){
-        //the received work matches the latest request ID then update peerToHash
-        this._peerToHash[message.peer] = message.hash;
-        console.log("   Received WORK_SAVED from: " + message.peer);
-        //console.log("   peerToHash: " + JSON.stringify(this._peerToHash));
-        console.log("   Num work received: " + Object.keys(this._peerToHash).length);
+        if(message.hash === undefined){
+          console.log(message.peer + " send an undefined message.hash");
+        }
+        else{
+          //the received work matches the latest request ID then update peerToHash
+          this._peerToHash[message.peer] = message.hash;
+          console.log("   Received WORK_SAVED from: " + message.peer);
+          //console.log("   peerToHash: " + JSON.stringify(this._peerToHash));
+          console.log("   Num work received: " + Object.keys(this._peerToHash).length);
 
-        if(this._epoch < message.epoch){
-          console.log("   Updating epoch from: " + this._epoch + " to: " + message.epoch);
-          this._epoch = message.epoch;
+          if(this._epoch < message.epoch){
+            console.log("   Updating epoch from: " + this._epoch + " to: " + message.epoch);
+            this._epoch = message.epoch;
+          }
         }
       }
     }
@@ -404,7 +407,7 @@ class Worker extends EventEmitter{
   }
 
   sendWork(){
-    if(this._peerToHash[this._id] != 'undefined'){
+    if(this._peerToHash[this._id] !== undefined){
       //the work has finished saving
       if(this._broadcastWork){
         console.log("   Broadcasting work to room");
@@ -435,22 +438,47 @@ class Worker extends EventEmitter{
   }
 
   loadWork(callback){
-    if(this._workLoadQueue.length > 0){
-      while(this._workLoadQueue.length > 0){
-        var message = this._workLoadQueue.shift();
-        console.log("   Loading hash: " + message.hash + "\n   from peer: " + message.peer);
-        this._ipfs.files.cat(message.hash,(err,data) => callback(err,JSON.parse(data)));
-      }
+    var getFile = (hash,peer) => {
+      console.log("   Loading hash: " + hash + "\n   from peer: " + peer);
+      var cat = this._ipfs.files.cat(hash).then((data) => {
+        return new Promise((resolve,reject) => { resolve(data) });
+      });
+
+      var timeout = new Promise((resolve,reject)=>{
+        let id = setTimeout(()=>{
+          clearTimeout(id);
+          reject('Load Work Timed Out.')
+
+        },20000);
+      });
+
+      Promise.race([cat,timeout]).then((result) => {
+        callback(JSON.parse(result));
+      }).catch(error => {
+        console.log(error);
+        //console.log('Trying the HTTP gateway');
+        //this.getJSONP('https://ipfs.io/ipfs/'+hash, (data)=>{
+        //  console.log(data);
+        //  callback(data);
+        //});  
+      });
+      
     }
-    else{
+    if(this._state == Worker.STATES.LOAD_WORK){
       for(let peer of this._peers) {
         if( peer !== this._id ){
           let hash = this._peerToHash[peer];
+          console.log("    Loading Peer,Hash: " + peer + " " + hash);
           if(this._peerToHash.hasOwnProperty(peer) && hash !== undefined){
-            console.log("   Loading hash: " + hash + "\n   from peer: " + peer);
-            this._ipfs.files.cat(hash,(err,data) => callback(err,JSON.parse(data)));
+            getFile(hash,peer);
           }
         }
+      }
+    }
+    else{
+      while(this._workLoadQueue.length > 0){
+        var message = this._workLoadQueue.shift();
+        getFile(message.hash,message.peer);
       }
     }
   }
@@ -463,6 +491,23 @@ class Worker extends EventEmitter{
     var message = {'command':command,'data':data}
     return JSON.stringify(message);
   }
+
+  getJSONP(url, success) {
+
+    var ud = '_' + +new Date,
+        script = document.createElement('script'),
+        head = document.getElementsByTagName('head')[0] 
+               || document.documentElement;
+
+    window[ud] = function(data) {
+        head.removeChild(script);
+        success && success(data);
+    };
+
+    script.src = url.replace('callback=?', 'callback=' + ud);
+    head.appendChild(script);
+
+   }
 }
 
 module.exports = Worker;
