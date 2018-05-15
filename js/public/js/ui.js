@@ -183,13 +183,13 @@ setInterval(() => {
   //console.log(avgWorkLoaded);
   //console.log(workLoaded);
   var submissionItemToDelete = 0;
-  if(submissionsDataset.length > 50){
+  if(submissionsDataset.length > 100){
     //only show 50 secs worth of submission rate data on chart
     submissionItemToDelete = submissionsDataset.min('x');
     submissionsDataset.remove(submissionItemToDelete);
     if(steps > submissionsWindow.max){
         submissionsWindow.min = steps-10;
-        submissionsWindow.max = steps + 40;
+        submissionsWindow.max = steps + 90;
         submissionsChart.setWindow(submissionsWindow.min,submissionsWindow.max);
     }
 
