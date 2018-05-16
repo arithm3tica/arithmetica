@@ -5,6 +5,7 @@ const IPFS = require('ipfs');
 const Room = require('ipfs-pubsub-room');
 const unique = require('array-unique');
 const uuid = require('uuid/v4');
+const jsonp = require('node-jsonp');
 
 const STATES = Object.freeze({
   NEW_PEER: Symbol("FOUND_NEW_PEER"),
@@ -33,7 +34,7 @@ class Worker extends EventEmitter{
     this._states = [];
     this._work = 0;
     this._workSequence = [];
-    this._workSequenceLength = 100;
+    this._workSequenceLength = 250;
     this._completedWork = {};
     this._numWorkReceived = 0;
     this._numWorkLoaded = 0;
@@ -178,13 +179,21 @@ class Worker extends EventEmitter{
       }
       else if(this._state == Worker.STATES.LOAD_WORK){
         let afterLoad = (data) => {
-            if(parseInt(data.work) > this._work){
-              console.log("   " + parseInt(data.work) + " > " + this._work);
-              this._work = parseInt(data.work);
+            if(data === "Timeout"){
+              //if loading the file times out then repeat
+              this.loadWork(afterLoad);
             }
-            this._completedWork = Object.assign(this._completedWork,data.completedWork);
-            this._numWorkLoaded += 1;
-            console.log("   numWorkLoaded: " + this._numWorkLoaded);
+            else{
+              if(parseInt(data.work) > this._work){
+                console.log("   " + parseInt(data.work) + " > " + this._work);
+                this._work = parseInt(data.work);
+              }
+              this._completedWork = Object.assign(this._completedWork,data.completedWork);
+              //emit this event to allow the UI to populate current submission immediately
+              this.emit('WorkLoaded',{peer:data.peer,work:data.work, completedWork:this._completedWork, workSequenceLength: this._workSequenceLength});
+              this._numWorkLoaded += 1;
+              console.log("   numWorkLoaded: " + this._numWorkLoaded);
+            }
         };
         if(this._prevState == Worker.STATES.RECEIVE_WORK){
           console.log("***LOAD_WORK***");
@@ -197,7 +206,7 @@ class Worker extends EventEmitter{
                 state = this._states.pop();
               }
               this._states.unshift(Worker.STATES.GENERATE_WORK_SEQUENCE);
-              this.emit('WorkLoaded',{peer: this._id, work:this._work, completedWork:this._completedWork});
+              this.emit('WorkLoaded',{peer: this._id, work:this._work, completedWork:this._completedWork, workSequenceLength: this._workSequenceLength});
               console.log("   ALL WORK IS LOADED: " + this._work);
               this._numWorkLoaded = 0;
               this._peerToHash = {};
@@ -223,7 +232,7 @@ class Worker extends EventEmitter{
         this.processWorkSaved();
         let afterLoad = (data) => {
           this._completedWork = Object.assign(this._completedWork,data.completedWork);
-          this.emit('WorkLoaded',{peer:data.peer,work:data.work, completedWork:this._completedWork});
+          this.emit('WorkLoaded',{peer:data.peer,work:data.work, completedWork:this._completedWork, workSequenceLength: this._workSequenceLength});
           console.log("   Finished loading saved work." );
         };
         this.loadWork(afterLoad);
@@ -401,13 +410,14 @@ class Worker extends EventEmitter{
     notReceivedFrom.forEach(peer => { 
       console.log("   Requesting Work from: " + peer);
       this._room.sendTo(peer,message);
-      this._workRequestSentTo.push({peer:peer,requestID:requestID,epoch:this._epoch,timeout:10});
+      this._workRequestSentTo.push({peer:peer,requestID:requestID,epoch:this._epoch,timeout:100});
       this._peerToRequest[peer]={requestID:requestID, epoch:this._epoch};
     });   
   }
 
   sendWork(){
     if(this._peerToHash[this._id] !== undefined){
+      console.log
       //the work has finished saving
       if(this._broadcastWork){
         console.log("   Broadcasting work to room");
@@ -416,7 +426,7 @@ class Worker extends EventEmitter{
         this._broadcastWork = false;
       }
       else{
-        while(this._workRequestedQueue.length > 0){
+        if(this._workRequestedQueue.length > 0){
           //send saved work to each requestor in the queue
           var request = this._workRequestedQueue.shift();
           var message = this.constructMessage('WORK_SAVED',{requestID:request.requestID,epoch:this._epoch,work:this._work,hash:this._peerToHash[this._id]});
@@ -426,6 +436,7 @@ class Worker extends EventEmitter{
           //their epoch and we haven't finished saving our work.
           if(request.epoch > this._epoch){
             console.log("   My Epoch is behind Thiers. Mine: " + this._epoch + " Theirs: " + request.epoch);
+            this._epoch = request.epoch;
           }
           else{
             console.log("   Sending Work to: " + request.peer);
@@ -456,12 +467,17 @@ class Worker extends EventEmitter{
         callback(JSON.parse(result));
       }).catch(error => {
         console.log(error);
+        callback("Timeout");
         //console.log('Trying the HTTP gateway');
+        //jsonp('https://ipfs.io/ipfs/'+hash,'callback',(data)=>{
+        //  console.log("Retrieved hash: " + hash + " from HTTP Gateway");
+        //  callback(JSON.stringify(data));
+        });
         //this.getJSONP('https://ipfs.io/ipfs/'+hash, (data)=>{
-        //  console.log(data);
-        //  callback(data);
+        //  console.log(JSON.parse(data));
+        //  callback(JSON.parse(data));
         //});  
-      });
+      //});
       
     }
     if(this._state == Worker.STATES.LOAD_WORK){
@@ -476,7 +492,7 @@ class Worker extends EventEmitter{
       }
     }
     else{
-      while(this._workLoadQueue.length > 0){
+      if(this._workLoadQueue.length > 0){
         var message = this._workLoadQueue.shift();
         getFile(message.hash,message.peer);
       }
