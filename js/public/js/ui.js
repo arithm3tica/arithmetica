@@ -7,7 +7,7 @@ var rebuildTable = false;
 var id = '';
 
 var submissionsContainer = document.getElementById('submissionsChart');
-var submissionsWindow = {min: 0,max: 50};
+var submissionsWindow = {min: 0,max: 100};
 var submissionsChartOptions = {
     min: 0,
     start: submissionsWindow.min,
@@ -120,11 +120,13 @@ var iterationsDataset = new vis.DataSet(iterationsData,{});
 var iterationsChart = new vis.Graph2d(iterationsContainer, iterationsDataset, iterationsChartOptions);
 var latestHash = '';
 var updateTable = false;
+var numPeers = 0;
 
 function workerEvent(eventName, data){
   if(eventName == 'CompletedWork'){
       totalSubmissions += 1;
       latestHash = data.hash;
+      numPeers = data.peers.length
       if(iterationsDataset.length < 1500){
         iterationsData.push({x:data.work,y:data.iterations});
       }
@@ -139,7 +141,7 @@ function workerEvent(eventName, data){
   }
   else if (eventName == 'WorkLoaded'){
       if(id !== data.peer){
-        totalWorkLoaded += 100;
+        totalWorkLoaded += data.workSequenceLength;
         updateTableObject(data.peer, data.work);
       }
       else{
@@ -177,8 +179,6 @@ setInterval(() => {
   if(workLoaded.length > 20){
     workLoaded.shift();
   }
-  var sum = workLoaded.reduce((a,b)=>{return a + b;})
-  avgWorkLoaded = sum / workLoaded.length;
   totalWorkLoaded = 0;
   //console.log(avgWorkLoaded);
   //console.log(workLoaded);
@@ -188,20 +188,19 @@ setInterval(() => {
     submissionItemToDelete = submissionsDataset.min('x');
     submissionsDataset.remove(submissionItemToDelete);
     if(steps > submissionsWindow.max){
-        submissionsWindow.min = steps-10;
+        submissionsWindow.min = steps - 10;
         submissionsWindow.max = steps + 90;
         submissionsChart.setWindow(submissionsWindow.min,submissionsWindow.max);
     }
 
   }
 
-  submissionsData.push({x:steps,y:totalSubmissions+avgWorkLoaded});  
+  submissionsData.push({x:steps,y:totalSubmissions*numPeers});  
   //submissionsChart.setItems(submissionsData);
   submissionsDataset.add(submissionsData);  
   //submissionsChart.fit();
   submissionsData = [];
   totalSubmissions = 0;
-  avgWorkLoaded = 0;
   if(iterationsDataset.length < 1500){
     var max = iterationsDataset.max('x');
     if(max !== null && max.x > xIterationsMax){
@@ -212,9 +211,9 @@ setInterval(() => {
   }
   iterationsData = [];
 
-  if(steps % 10 == 0){
-    rebuildTable = true;
-  }
+  //if(steps % 10 == 0){
+  //  rebuildTable = true;
+  //}
   updateTable = true;
 }, 1000)
 
@@ -247,7 +246,7 @@ function addTableObject(workerId, count) {
     var index = participantTable.findIndex((element) => {
         return element.id == workerId;
     });
-    if(index == -1){
+    if(index == -1 && workerId !== undefined && count !== undefined){
         participantTable.push({"id": workerId, "count": count});
         rebuildTbody();
     }
