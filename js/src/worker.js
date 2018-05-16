@@ -5,7 +5,6 @@ const IPFS = require('ipfs');
 const Room = require('ipfs-pubsub-room');
 const unique = require('array-unique');
 const uuid = require('uuid/v4');
-const jsonp = require('node-jsonp');
 
 const STATES = Object.freeze({
   NEW_PEER: Symbol("FOUND_NEW_PEER"),
@@ -47,12 +46,23 @@ class Worker extends EventEmitter{
     this._epoch = 0;
     this._broadcastWork = false;
 
+    //load work timeout
+    this._num_loadWorks = 1;
+    this._num_timeouts = 0;
+    this._timeout = 20000;
+
     //if signalling server is down check the url https://ws-star-signal-2.servep2p.com/ in chrome
     this._ipfs = new IPFS({
       //allows us to test using same browser instance, but different windows
       repo: 'ipfs/arithmetica/' + Math.random(),
       EXPERIMENTAL: {
-        pubsub: true
+        pubsub: true,
+        relay:{
+          enabled: true,  //dialer/listener -> allows us to use relayed connections.
+          hop: {
+            enabled: true //actual relay -> this option tells the node to relay connections.
+          }
+        }
       },
       config: {
         Addresses: {
@@ -180,6 +190,14 @@ class Worker extends EventEmitter{
       else if(this._state == Worker.STATES.LOAD_WORK){
         let afterLoad = (data) => {
             if(data === "Timeout"){
+              //TODDO: needs to be a sep function
+              var ratio = this._num_timeouts/(this._num_loadWorks+this._num_timeouts);
+              if(ratio > .50 && this._num_loadWorks + this._num_timeouts > 5){
+                  console.log("timeout ratio is: " + ratio + " setting timeout to 60 secs")
+                  this._num_timeouts = 0;
+                  this._num_loadWorks = 1;
+                  this._timeout = 60000
+              }
               //if loading the file times out then repeat
               this.loadWork(afterLoad);
             }
@@ -231,9 +249,14 @@ class Worker extends EventEmitter{
         this.doWork();
         this.processWorkSaved();
         let afterLoad = (data) => {
-          this._completedWork = Object.assign(this._completedWork,data.completedWork);
-          this.emit('WorkLoaded',{peer:data.peer,work:data.work, completedWork:this._completedWork, workSequenceLength: this._workSequenceLength});
-          console.log("   Finished loading saved work." );
+          if(data === "Timeout"){
+              console.log("Do work timeout on workload");
+          }
+          else{
+            this._completedWork = Object.assign(this._completedWork,data.completedWork);
+            this.emit('WorkLoaded',{peer:data.peer,work:data.work, completedWork:this._completedWork, workSequenceLength: this._workSequenceLength});
+            console.log("   Finished loading saved work." );
+          }
         };
         this.loadWork(afterLoad);
         //console.log("   Completed work: " + this._work);
@@ -252,6 +275,7 @@ class Worker extends EventEmitter{
       }
       this.sendWork();
       this.updateState();
+      this.checkTimeout();
 
     }, 100)
 
@@ -365,8 +389,10 @@ class Worker extends EventEmitter{
     //process all the work saved messages
     while(this._workSavedQueue.length > 0){
       var message = this._workSavedQueue.shift();
-      //if there is no requestID, then process it as a normal work update via broadcastWork
+      //requestID tells us that this work was requested by us for sync
+      //if there is no requestID, then process it as a normal work sync between peers
       if(message.requestID == -1){
+        //the peer sending this message is in state == WORK
         this._workLoadQueue.unshift(message);
         console.log("   Received WORK_SAVED from: " + message.peer);
       }
@@ -378,7 +404,6 @@ class Worker extends EventEmitter{
           //the received work matches the latest request ID then update peerToHash
           this._peerToHash[message.peer] = message.hash;
           console.log("   Received WORK_SAVED from: " + message.peer);
-          //console.log("   peerToHash: " + JSON.stringify(this._peerToHash));
           console.log("   Num work received: " + Object.keys(this._peerToHash).length);
 
           if(this._epoch < message.epoch){
@@ -460,13 +485,15 @@ class Worker extends EventEmitter{
           clearTimeout(id);
           reject('Load Work Timed Out.')
 
-        },20000);
+        },this._timeout);
       });
 
       Promise.race([cat,timeout]).then((result) => {
+        this._num_loadWorks += 1;
         callback(JSON.parse(result));
       }).catch(error => {
         console.log(error);
+        this._num_timeouts += 1;
         callback("Timeout");
         //console.log('Trying the HTTP gateway');
         //jsonp('https://ipfs.io/ipfs/'+hash,'callback',(data)=>{
@@ -491,14 +518,29 @@ class Worker extends EventEmitter{
         }
       }
     }
-    else{
+    else{ // this._state == Worker.STATES.WORK
       if(this._workLoadQueue.length > 0){
         var message = this._workLoadQueue.shift();
+        console.log("    " + this._workLoadQueue.length + " work objects pending load from ipfs.")
         getFile(message.hash,message.peer);
       }
     }
   }
 
+  checkTimeout(){
+    var ratio = this._num_timeouts/(this._num_loadWorks+this._num_timeouts);
+    if(ratio > .50 && this._num_loadWorks + this._num_timeouts > 5){
+      console.log("timeout ratio is: " + ratio + " setting timeout to 60 secs")
+      this._num_timeouts = 0;
+      this._num_loadWorks = 1;
+      this._timeout = 60000
+    }
+
+    if(this._num_loadWorks + this._num_timeouts > 10){
+      this._num_timeouts = 0;
+      this._num_loadWorks = 1;
+    }
+  }
   parseMessage(message){
     return JSON.parse(message);
   }
