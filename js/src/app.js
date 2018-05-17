@@ -75,16 +75,13 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     });
 
-
-
 }, false);
 
 function switchToContribute() {
     $("#submit-problem-ui").hide();
     $("#add-problem-button").show();
     $("#contribute-problem-ui").show();
-    document.getElementById("problem-name").value = currentProblem;
-    $("#problem-name").prop('disabled', true);
+    document.getElementById("contributing-problem-name").innerHTML = currentProblem;
 }
 
 function switchToAdd() {
@@ -108,7 +105,7 @@ function buildProblemDropdown(problemsList) {
     let innerHTML = "";
     let counter = 1;
     for(let problem of problemsList) {
-        innerHTML = innerHTML + "<a id=\"contribute-dd-item" + counter + "\" class=\"dropdown-item\" href=\"#" + problem + "\">" + problem + "</a>";
+        innerHTML = innerHTML + '<li><a id="contribute-dd-item' + counter + '" href="#' + problem + '">' + problem + '</a></li>';
         contributeDDItems.push("contribute-dd-item" + counter);
     }
     return innerHTML;

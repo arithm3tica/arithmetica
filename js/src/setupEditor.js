@@ -10,12 +10,12 @@ module.exports = function setupEditor(name) {
         editor.setOption("minLines", 15);
         editor.setOption("highlightActiveLine", false);
         if(name === "evaluation-input") {
-            editor.insert('evaluation(input) {\n'+
+            editor.insert('function evaluation(input) {\n'+
             '\tinput += 1;\n'+
             '\treturn input;\n'+
             '}');
         } else if(name === "assertion-input") {
-            editor.insert('assertions(original, number, iterations) {\n'+
+            editor.insert('function assertions(original, number, iterations) {\n'+
             '\tif(iterations > 10) return true;\n'+
             '}');
         } else {
