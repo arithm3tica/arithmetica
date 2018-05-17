@@ -141,12 +141,12 @@ form {
 }
 .button {
   height: 44px;
-  background: #1F9C9C;
+  background: linear-gradient(180deg, #1F9C9C 0%, #1F929C 100%);
   color: #fff;
   font-size: 16px;
   padding: 0 30px;
   border: none;
-  border-radius: 4px;
+  border-radius: 2px;
   box-shadow: 2px 2px 4px rgba(33, 44, 55, .15);
 }
 #submit-problem {
@@ -164,9 +164,6 @@ form {
 }
 #problem-name-container {
   margin-bottom: 37px !important;
-}
-#submit-problem{
-  margin-top: 37px;
 }
 .btn-outline-secondary{
   border: black solid 1px !important;
@@ -228,13 +225,6 @@ form {
   border-bottom: solid 0px !important;
   outline: none;
   color: black;
-}
-
-#submit-problem{
-  border-radius: 0 !important;
-  border-left: solid 0px !important;
-  border-right: solid 0px !important;
-  outline: none;
 }
 .ace-chrome {
   background-color: #FFFFFF;
