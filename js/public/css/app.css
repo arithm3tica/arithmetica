@@ -30,12 +30,20 @@ nav ul {
 }
 nav li {
   float: left;
+  position: relative;
 }
 nav li + li {
   margin-left: 10px;
 }
 nav a,
-nav button {
+nav button,
+.nav-dropdown:before,
+.nav-dropdown:after {
+    transition: all 80ms;
+}
+nav a,
+nav button,
+.nav-dropdown {
   background: none;
   border: none;
   font-size: 16px;
@@ -49,9 +57,14 @@ nav button {
 nav *:focus {
   outline: none;
 }
+nav li:hover > a,
+nav li:hover > button {
+    color: #1F979C;
+}
 .nav-dropdown {
   position: relative;
   padding-right: 32px;
+  cursor: default;
 }
 .nav-dropdown:before {
   content: '';
@@ -72,6 +85,40 @@ nav *:focus {
   right: 10px;
   background: #fff;
   transform: rotate(-45deg);
+}
+.nav-dropdown:hover:before,
+.nav-dropdown:hover:after {
+    background: #1f979c;
+}
+.dropdown-menu {
+  position: absolute;
+  display: none;
+  background: #fff;
+  top: 100%;
+  left: 10px;
+  border: 1px solid #b8c1cc;
+  min-width: 100%;
+  min-height: 20px;
+  box-shadow: 1px 1px 4px rgba(33, 44, 55, .25);
+  border-radius: 2px;
+}
+.nav-dropdown:hover .dropdown-menu {
+  display: block;
+}
+.dropdown-menu li {
+    float: none;
+}
+.dropdown-menu li + li {
+    margin-left: 0;
+    border-top: 1px solid #dce2e9;
+}
+.dropdown-menu a {
+  font-size: 15px;
+  color: inherit;
+  padding: 0 20px;
+  line-height: 40px;
+  height: 40px;
+  white-space: nowrap;
 }
 .inner {
   max-width: 1200px;
@@ -177,9 +224,9 @@ form {
 }
 
 .btn{
-    -webkit-box-shadow: none!important;
-    box-shadow: none!important;
-    background: #FFFFFF;
+  -webkit-box-shadow: none!important;
+  box-shadow: none!important;
+  background: #FFFFFF;
 }
 
 .ace_gutter-layer{
@@ -242,16 +289,45 @@ form {
   background-color: #FFFFFF;
   border-color: #0000000;
 }
+table {
+  border-collapse: collapse;
+}
+h1 label {
+    font-size: 18px;
+    font-weight: 400;
+    color: #858C98;
+    display: block;
+}
+#contribute-problem-ui {
+  padding:0 60px;
+}
+#contribute-problem-ui h1 {
+    margin-top: 45px;
+}
+#contribute-problem-ui h2 {
+  font-size: 18px;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+.active-contributors table {
+  font-size: 14px;
+  width: 100%;
+}
+th, td { 
+  padding: 10px;
+  text-align: left;
+}
+th {
+  font-weight: 600;
+}
+thead th {
+  border-bottom: 2px solid #B8C1CC;
+}
 .mb-3, .my-3 {
   margin: 0px !important;
 }
-.dropdown-item.active, .dropdown-item:active {
-  color: #FFFFFF;
-  text-decoration: none;
-  background-color: #000000;
-}
 .scroll-table {
-  border: black solid 1px !important;
+  border: #B8C1CC solid 1px !important;
   border-left: solid 0px !important;
   border-right: solid 0px !important;
   height: 238px;
@@ -262,6 +338,7 @@ form {
   padding-top: 25px;
   padding-left: 50px;
   padding-right: 50px;
+  margin-bottom: 45px;
   overflow: hidden;
 }
 
