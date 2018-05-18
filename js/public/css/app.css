@@ -1,8 +1,213 @@
-#logo{
-  height: 45px;
-  width: 45px;
-  margin-right: 10px;
+* {
+  box-sizing: border-box;
 }
+body {
+  margin: 0;
+  font-family: 'Open Sans', sans-serif;
+  color: #273143;
+}
+button {
+  cursor: pointer;
+}
+#main-header {
+  background: #212C37;
+  padding: 0 30px;
+  height: 60px;
+}
+#logo {
+  height: 34px;
+  margin: 13px 0;
+  float: left;
+}
+#main-header nav {
+  float: left;
+  margin: 13px 0 13px 60px;
+}
+nav ul {
+  list-style: none;
+  margin: 0;
+  padding: 0
+}
+nav li {
+  float: left;
+  position: relative;
+}
+nav li + li {
+  margin-left: 10px;
+}
+
+nav a,
+nav button,
+.nav-dropdown:before,
+.nav-dropdown:after {
+    transition: all 80ms;
+}
+nav a,
+nav button,
+.nav-dropdown {
+  background: none;
+  border: none;
+  font-size: 16px;
+  color: #fff;
+  line-height: 34px;
+  height: 34px;
+  display:block;
+  padding: 0 10px;
+  text-decoration: none;
+}
+nav *:focus {
+  outline: none;
+}
+nav li:hover > a,
+nav li:hover > button {
+    color: #1F979C;
+}
+.nav-dropdown {
+  position: relative;
+  padding-right: 32px;
+  cursor: default;
+}
+.nav-dropdown:before {
+  content: '';
+  position: absolute;
+  width: 8px;
+  height: 1px;
+  top: 18px;
+  right: 15px;
+  background: #fff;
+  transform: rotate(45deg);
+}
+.nav-dropdown:after {
+  content: '';
+  position: absolute;
+  width: 8px;
+  height: 1px;
+  top: 18px;
+  right: 10px;
+  background: #fff;
+  transform: rotate(-45deg);
+}
+.nav-dropdown:hover:before,
+.nav-dropdown:hover:after {
+    background: #1f979c;
+}
+.dropdown-menu {
+  position: absolute;
+  display: none;
+  background: #fff;
+  top: 100%;
+  left: 10px;
+  border: 1px solid #b8c1cc;
+  min-width: 100%;
+  min-height: 20px;
+  box-shadow: 1px 1px 4px rgba(33, 44, 55, .25);
+  border-radius: 2px;
+}
+.nav-dropdown:hover .dropdown-menu {
+  display: block;
+}
+.dropdown-menu li {
+    float: none;
+}
+.dropdown-menu li + li {
+    margin-left: 0;
+    border-top: 1px solid #dce2e9;
+}
+.dropdown-menu a {
+  font-size: 15px;
+  color: #273143;
+  padding: 0 20px;
+  line-height: 40px;
+  height: 40px;
+  white-space: nowrap;
+}
+
+.dropdown-menu a:hover {
+  font-weight: bold;
+  color: #1f979c;
+}
+
+.inner {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+h1 {
+  font-weight: 600;
+  font-size: 24px;
+  margin: 60px 0 30px
+}
+.input-block-pair {
+  margin: 30px 0;
+}
+.input-block-pair:before,
+.input-block-pair:after {
+  content: '';
+  display: table;
+  clear: both;
+}
+.input-block-pair .input-block {
+  width: 50%;
+  float: left;
+  margin: 0;
+}
+.input-block-pair .input-block + .input-block {
+  margin-left: -1px;
+  width: calc(50% + 1px);
+}
+.input-block {
+  margin: 30px 0;
+}
+.input-block input[type=text],
+.input-block input[type=number],
+.input-block input[type=tel],
+.input-block input[type=password],
+.input-block input[type=date],
+.input-block input[type=email],
+.input-block input[type=search],
+.input-block input[type=time],
+.input-block input[type=url] {
+  height: 44px;
+  border: 1px solid #B8C1CC;
+  font-size: 16px;
+  padding: 10px;
+}
+.ace_editor.ace-chrome {
+  border: 1px solid #B8C1CC !important;
+  font-size: 14px;
+}
+.ace_gutter {
+  background: #F0F2F4 !important;
+}
+.ace_gutter-layer {
+  background: none !important;
+}
+.input-block input,
+.input-block text-area {
+  width: 100%;
+}
+.block-label {
+  font-size: 18px;
+  margin-bottom: 10px;
+  display: block;
+}
+form {
+  margin-bottom: 60px;
+}
+.button {
+  height: 44px;
+  background: linear-gradient(180deg, #1F9C9C 0%, #1F929C 100%);
+  color: #fff;
+  font-size: 16px;
+  padding: 0 30px;
+  border: none;
+  border-radius: 2px;
+  box-shadow: 2px 2px 4px rgba(33, 44, 55, .15);
+}
+#submit-problem {
+  margin-top: 16px;
+  padding: 0 60px;
+}
+
 .black-bar{
   height: 1px;
   width: auto;
@@ -13,9 +218,6 @@
 }
 #problem-name-container {
   margin-bottom: 37px !important;
-}
-#submit-problem{
-  margin-top: 37px;
 }
 .btn-outline-secondary{
   border: black solid 1px !important;
@@ -29,9 +231,9 @@
 }
 
 .btn{
-    -webkit-box-shadow: none!important;
-    box-shadow: none!important;
-    background: #FFFFFF;
+  -webkit-box-shadow: none!important;
+  box-shadow: none!important;
+  background: #FFFFFF;
 }
 
 .ace_gutter-layer{
@@ -78,25 +280,12 @@
   outline: none;
   color: black;
 }
-
-#submit-problem{
-  border-radius: 0 !important;
-  border-left: solid 0px !important;
-  border-right: solid 0px !important;
-  outline: none;
-}
 .ace-chrome {
   background-color: #FFFFFF;
   color: black;
   border: black solid 1px !important;
   border-left: solid 0px !important;
   border-right: solid 0px !important;
-}
-.navbar-light .navbar-nav .nav-link:focus, .navbar-light .navbar-nav .nav-link:hover {
-  color: #000000;
-}
-.navbar-light .navbar-nav .nav-link {
-  color: #000000;
 }
 .dropdown-menu.show {
   display: block;
@@ -107,22 +296,45 @@
   background-color: #FFFFFF;
   border-color: #0000000;
 }
-.navbar {
-  border: black solid 1px !important;
-  border-radius: 0 !important;
-  border-left: solid 0px !important;
-  border-right: solid 0px !important;
+table {
+  border-collapse: collapse;
+}
+h1 label {
+    font-size: 18px;
+    font-weight: 400;
+    color: #858C98;
+    display: block;
+}
+#contribute-problem-ui {
+  padding:0 60px;
+}
+#contribute-problem-ui h1 {
+    margin-top: 45px;
+}
+#contribute-problem-ui h2 {
+  font-size: 18px;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+.active-contributors table {
+  font-size: 14px;
+  width: 100%;
+}
+th, td { 
+  padding: 10px;
+  text-align: left;
+}
+th {
+  font-weight: 600;
+}
+thead th {
+  border-bottom: 2px solid #B8C1CC;
 }
 .mb-3, .my-3 {
   margin: 0px !important;
 }
-.dropdown-item.active, .dropdown-item:active {
-  color: #FFFFFF;
-  text-decoration: none;
-  background-color: #000000;
-}
 .scroll-table {
-  border: black solid 1px !important;
+  border: #B8C1CC solid 1px !important;
   border-left: solid 0px !important;
   border-right: solid 0px !important;
   height: 238px;
@@ -133,6 +345,7 @@
   padding-top: 25px;
   padding-left: 50px;
   padding-right: 50px;
+  margin-bottom: 45px;
   overflow: hidden;
 }
 

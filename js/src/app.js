@@ -35,7 +35,6 @@ arithmeticaContract.setProvider(web3Provider);
 
 var evaluationEditor;
 var assertionEditor;
-var setupEditor = require('./setupEditor');
 
 var contributeDDItems = [];
 var currentProblem = "";
@@ -45,15 +44,11 @@ document.addEventListener("DOMContentLoaded", function() {
         $("#add-problem-button").hide();
         $("#contribute-problem-ui").hide();
     }
-    evaluationEditor = setupEditor("evaluation-input");
-    assertionEditor = setupEditor("assertion-input");
+    evaluationEditor = document.getElementById("evaluation-input");
+    assertionEditor = document.getElementById("assertion-input");
     document.getElementById("submit-problem").addEventListener("click", () => {
-        //handleCreateProblemClicked(arithmeticaContract, evaluationEditor, assertionEditor)
-        deleteProblem();
+        handleCreateProblemClicked(arithmeticaContract, evaluationEditor, assertionEditor)
     });
-    document.getElementById("add-problem-button").addEventListener("click", () => {
-        switchToAdd();}
-    );
     getProblems().then((problemsList) => {
         $("#problem-dropdown-menu").html(buildProblemDropdown(problemsList));
         contributeDDItems = buildDDItemList();
@@ -75,16 +70,13 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     });
 
-
-
 }, false);
 
 function switchToContribute() {
     $("#submit-problem-ui").hide();
     $("#add-problem-button").show();
     $("#contribute-problem-ui").show();
-    document.getElementById("problem-name").value = currentProblem;
-    $("#problem-name").prop('disabled', true);
+    document.getElementById("contributing-problem-name").innerHTML = currentProblem;
 }
 
 function switchToAdd() {
@@ -108,8 +100,9 @@ function buildProblemDropdown(problemsList) {
     let innerHTML = "";
     let counter = 1;
     for(let problem of problemsList) {
-        innerHTML = innerHTML + "<a id=\"contribute-dd-item" + counter + "\" class=\"dropdown-item\" href=\"#" + problem + "\">" + problem + "</a>";
+        innerHTML = innerHTML + '<li><a id="contribute-dd-item' + counter + '" href="#' + problem + '">' + problem + '</a></li>';
         contributeDDItems.push("contribute-dd-item" + counter);
+        counter++;
     }
     return innerHTML;
 }
