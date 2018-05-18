@@ -1,7 +1,10 @@
 #!/bin/bash
 
-cd js && npm run build && cd ..
-
+if [ "$1" == "dev" ]; then
+	cd js && npm run build-$1 && cd ..
+else
+	cd js && npm run build && cd ..
+fi
 while read p; do
 	if [[ $p == "<script src='src/app.js'></script>" ]]; then
 		echo "<script>"

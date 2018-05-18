@@ -45,6 +45,14 @@ cd PROJECT_ROOT/js; npm install; cd..
 
 ```bash
 
-./build.sh
+./build
+
+```
+
+### Development Build (easier to debug)
+
+```bash
+
+./build dev
 
 ```
