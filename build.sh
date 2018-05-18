@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cd js && npm run build-dev && cd ..
+cd js && npm run build && cd ..
 
 while read p; do
 	if [[ $p == "<script src='src/app.js'></script>" ]]; then
