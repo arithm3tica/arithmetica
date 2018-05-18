@@ -35,6 +35,7 @@ nav li {
 nav li + li {
   margin-left: 10px;
 }
+
 nav a,
 nav button,
 .nav-dropdown:before,
@@ -114,12 +115,18 @@ nav li:hover > button {
 }
 .dropdown-menu a {
   font-size: 15px;
-  color: inherit;
+  color: #273143;
   padding: 0 20px;
   line-height: 40px;
   height: 40px;
   white-space: nowrap;
 }
+
+.dropdown-menu a:hover {
+  font-weight: bold;
+  color: #1f979c;
+}
+
 .inner {
   max-width: 1200px;
   margin: 0 auto;

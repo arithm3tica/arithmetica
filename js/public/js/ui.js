@@ -1,3 +1,5 @@
+setupEditor();
+
 var steps = -1;
 var totalSubmissions = 0;
 var totalWorkLoaded = 0;
@@ -304,5 +306,31 @@ function generateTbodyString() {
 
 function updateLinktoLatestData(){
   $("#latestData").attr("href","https://ipfs.io/ipfs/" + latestHash);
+}
+
+function setupEditor(){
+    var evaluationEditor = ace.edit("evaluation-input");
+    evaluationEditor.setTheme("ace/theme/chrome");
+    evaluationEditor.session.setMode("ace/mode/javascript");
+    evaluationEditor.setOption("maxLines", 15);
+    evaluationEditor.setOption("minLines", 15);
+    evaluationEditor.setOption("highlightActiveLine", false);
+
+
+    var assertionEditor = ace.edit("assertion-input");
+    assertionEditor.setTheme("ace/theme/chrome");
+    assertionEditor.session.setMode("ace/mode/javascript");
+    assertionEditor.setOption("maxLines", 15);
+    assertionEditor.setOption("minLines", 15);
+    assertionEditor.setOption("highlightActiveLine", false);
+
+
+    evaluationEditor.insert('function evaluation(input) {\n'+
+        '\tinput += 1;\n'+
+        '\treturn input;\n'+
+        '}');
+    assertionEditor.insert('function assertions(original, number, iterations) {\n'+
+        '\tif(iterations > 10) return true;\n'+
+        '}');
 }
 

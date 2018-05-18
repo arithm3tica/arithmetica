@@ -35,7 +35,6 @@ arithmeticaContract.setProvider(web3Provider);
 
 var evaluationEditor;
 var assertionEditor;
-var setupEditor = require('./setupEditor');
 
 var contributeDDItems = [];
 var currentProblem = "";
@@ -45,8 +44,8 @@ document.addEventListener("DOMContentLoaded", function() {
         $("#add-problem-button").hide();
         $("#contribute-problem-ui").hide();
     }
-    evaluationEditor = setupEditor("evaluation-input");
-    assertionEditor = setupEditor("assertion-input");
+    evaluationEditor = document.getElementById("evaluation-input");
+    assertionEditor = document.getElementById("assertion-input");
     document.getElementById("submit-problem").addEventListener("click", () => {
         handleCreateProblemClicked(arithmeticaContract, evaluationEditor, assertionEditor)
     });
@@ -103,6 +102,7 @@ function buildProblemDropdown(problemsList) {
     for(let problem of problemsList) {
         innerHTML = innerHTML + '<li><a id="contribute-dd-item' + counter + '" href="#' + problem + '">' + problem + '</a></li>';
         contributeDDItems.push("contribute-dd-item" + counter);
+        counter++;
     }
     return innerHTML;
 }
