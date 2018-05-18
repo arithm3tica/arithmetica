@@ -16,6 +16,7 @@ var submissionsChartOptions = {
     end: submissionsWindow.max,
     showCurrentTime: false,
     showMajorLabels: false,
+    showMinorLabels: true,
     dataAxis: {
         left: {
           title:{
@@ -35,14 +36,14 @@ var submissionsChartOptions = {
           year: 'x'
       },
       majorLabels: {
-          millisecond: '',
-          second: '',
-          minute: '',
-          hour: '',
-          weekday: '',
-          day: '',
-          month: '',
-          year: ''
+          millisecond: 'x',
+          second: 'x',
+          minute: 'x',
+          hour: 'x',
+          weekday: 'x',
+          day: 'x',
+          month: 'x',
+          year: 'x'
       }
     },
     sort: false,
@@ -72,6 +73,7 @@ var iterationsChartOptions = {
     end: xIterationsMax,
     showCurrentTime: false,
     showMajorLabels: false,
+    showMinorLabels: true,
     dataAxis: {
         left: {
           title:{
@@ -94,15 +96,16 @@ var iterationsChartOptions = {
           year: 'x'
       },
       majorLabels: {
-          millisecond: '',
-          second: '',
-          minute: '',
-          hour: '',
-          weekday: '',
-          day: '',
-          month: '',
-          year: ''
-      }
+          millisecond: 'x',
+          second: 'x',
+          minute: 'x',
+          hour: 'x',
+          weekday: 'x',
+          day: 'x',
+          month: 'x',
+          year: 'x'
+      },
+
     },
     sort: true,
     sampling:false,
@@ -111,7 +114,7 @@ var iterationsChartOptions = {
     moveable: false,
     drawPoints: {
         enabled: true,
-        size: 6,
+        size: 3,
         style: 'circle' // square, circle
     },
     defaultGroup: 'Scatterplot',
@@ -129,9 +132,6 @@ function workerEvent(eventName, data){
       totalSubmissions += 1;
       latestHash = data.hash;
       numPeers = data.peers.length
-      if(iterationsDataset.length < 1500){
-        iterationsData.push({x:data.work,y:data.iterations});
-      }
       if(rebuildTable){
         buildTable(data);
         rebuildTable = false;
@@ -142,23 +142,9 @@ function workerEvent(eventName, data){
       }
   }
   else if (eventName == 'WorkLoaded'){
-      if(id !== data.peer){
-        totalWorkLoaded += data.workSequenceLength;
-        updateTableObject(data.peer, data.work);
-      }
-      else{
-        if(iterationsDataset.length < 1500){
-          iterationsData = [];
-          for (var i=1;i<data.work;i++){
-            if(data.completedWork.hasOwnProperty(i)){
-              iterationsData.push({x:i,y:data.completedWork[i]});
-            }
-          }
-          //iterationsDataset.clear();
-          iterationsDataset.update(iterationsData);
-          iterationsData = [];
-        }
-    }
+      totalWorkLoaded += data.workSequenceLength;
+      updateTableObject(data.peer, data.work);
+      updateIterationsChart(data);
   }
   else if (eventName == 'PeerJoined'){
       addTableObject(data.peer, 0);
@@ -175,15 +161,21 @@ function workerEvent(eventName, data){
 
 setInterval(() => {
   steps++;
+  updateTable = true;
   updateLinktoLatestData();
+  updateSubmissionsChart(steps);
 
+}, 1000)
+
+var participantTable = [];
+
+function updateSubmissionsChart(steps){
   workLoaded.push(totalWorkLoaded);
   if(workLoaded.length > 20){
     workLoaded.shift();
   }
   totalWorkLoaded = 0;
-  //console.log(avgWorkLoaded);
-  //console.log(workLoaded);
+
   var submissionItemToDelete = 0;
   if(submissionsDataset.length > 100){
     //only show 50 secs worth of submission rate data on chart
@@ -196,30 +188,28 @@ setInterval(() => {
     }
 
   }
-
   submissionsData.push({x:steps,y:totalSubmissions*numPeers});  
-  //submissionsChart.setItems(submissionsData);
   submissionsDataset.add(submissionsData);  
-  //submissionsChart.fit();
   submissionsData = [];
   totalSubmissions = 0;
-  if(iterationsDataset.length < 1500){
-    var max = iterationsDataset.max('x');
-    if(max !== null && max.x > xIterationsMax){
-      xIterationsMax += xIterationsMax; 
-      iterationsChart.setWindow(0,xIterationsMax);
+}
+
+function updateIterationsChart(data){
+    
+    iterationsData = [];
+    for (var i=1;i<data.work;i++){
+      if(data.completedWork.hasOwnProperty(i)){
+        iterationsData.push({x:i,y:data.completedWork[i]});
+      }
     }
-    iterationsDataset.add(iterationsData)
-  }
-  iterationsData = [];
-
-  //if(steps % 10 == 0){
-  //  rebuildTable = true;
-  //}
-  updateTable = true;
-}, 1000)
-
-var participantTable = [];
+    iterationsDataset.clear();
+    iterationsDataset = new vis.DataSet(iterationsData,{});
+    iterationsChart.destroy();
+    iterationsChartOptions.end = iterationsDataset.max('x').x
+    iterationsChart = new vis.Graph2d(iterationsContainer, iterationsDataset, iterationsChartOptions);
+    iterationsChart.fit();
+    iterationsData = [];
+}
 
 function buildTable(data){
     var tempTable = [];
