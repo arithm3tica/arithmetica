@@ -48,12 +48,8 @@ document.addEventListener("DOMContentLoaded", function() {
     evaluationEditor = setupEditor("evaluation-input");
     assertionEditor = setupEditor("assertion-input");
     document.getElementById("submit-problem").addEventListener("click", () => {
-        //handleCreateProblemClicked(arithmeticaContract, evaluationEditor, assertionEditor)
-        deleteProblem();
+        handleCreateProblemClicked(arithmeticaContract, evaluationEditor, assertionEditor)
     });
-    document.getElementById("add-problem-button").addEventListener("click", () => {
-        switchToAdd();}
-    );
     getProblems().then((problemsList) => {
         $("#problem-dropdown-menu").html(buildProblemDropdown(problemsList));
         contributeDDItems = buildDDItemList();
