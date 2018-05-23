@@ -20,7 +20,7 @@ var submissionsChartOptions = {
     dataAxis: {
         left: {
           title:{
-            text: 'Submissions'
+            text: 'Submissions Per Second'
           }
         }
     },
@@ -126,12 +126,15 @@ var iterationsChart = new vis.Graph2d(iterationsContainer, iterationsDataset, it
 var latestHash = '';
 var updateTable = false;
 var numPeers = 0;
+var _data = {};
 
 function workerEvent(eventName, data){
   if(eventName == 'CompletedWork'){
       totalSubmissions += 1;
       latestHash = data.hash;
       numPeers = data.peers.length
+      _data = data;
+      iterationsData.push({x:data.work,y:data.iterations})
       if(rebuildTable){
         buildTable(data);
         rebuildTable = false;
@@ -145,6 +148,7 @@ function workerEvent(eventName, data){
       totalWorkLoaded += data.workSequenceLength;
       updateTableObject(data.peer, data.work);
       updateIterationsChart(data);
+      _data = data;
   }
   else if (eventName == 'PeerJoined'){
       addTableObject(data.peer, 0);
@@ -164,6 +168,7 @@ setInterval(() => {
   updateTable = true;
   updateLinktoLatestData();
   updateSubmissionsChart(steps);
+  updateIterationsChart(_data);
 
 }, 1000)
 
@@ -196,19 +201,39 @@ function updateSubmissionsChart(steps){
 
 function updateIterationsChart(data){
     
-    iterationsData = [];
-    for (var i=1;i<data.work;i++){
-      if(data.completedWork.hasOwnProperty(i)){
-        iterationsData.push({x:i,y:data.completedWork[i]});
-      }
+    var shouldUpdate = false;
+    var maxX = 0;
+    if(iterationsDataset.length > 0) maxX = iterationsDataset.max('x').x;
+
+
+    if(maxX < data.work * 0.75){
+      shouldUpdate = true;
+      console.log("Should update iterations chart. Max X: " + maxX)
     }
-    iterationsDataset.clear();
-    iterationsDataset = new vis.DataSet(iterationsData,{});
-    iterationsChart.destroy();
-    iterationsChartOptions.end = iterationsDataset.max('x').x
-    iterationsChart = new vis.Graph2d(iterationsContainer, iterationsDataset, iterationsChartOptions);
-    iterationsChart.fit();
-    iterationsData = [];
+
+    //TODO: consider searching through the iterationsDataset for points not already added to 
+    //the plot.  this would allow us to not have to clear the plot and reload it completely
+    if(data.hasOwnProperty("completedWork")){
+      iterationsData = [];
+      for (var i=1;i<data.work;i++){
+        if(data.completedWork.hasOwnProperty(i)){
+          iterationsData.push({x:i,y:data.completedWork[i]});
+        }
+      }
+
+      iterationsDataset.clear();
+      iterationsDataset = new vis.DataSet(iterationsData,{});
+      iterationsChart.destroy();
+      iterationsChartOptions.end = maxX;
+      iterationsChart = new vis.Graph2d(iterationsContainer, iterationsDataset, iterationsChartOptions);
+      iterationsChart.fit();
+    }
+    else if(maxX < 500 || shouldUpdate){
+      iterationsDataset.add(iterationsData);
+      iterationsChartOptions.end = data.work;
+      iterationsChart.fit();
+      iterationsData = [];
+    }
 }
 
 function buildTable(data){
