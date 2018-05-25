@@ -263,6 +263,7 @@ class Worker extends EventEmitter{
         if(this._workSequence.length == 0){
           let afterSave = (err,file) => {
             console.log("   Added file: " + file[0].hash);
+            this.emit('WorkSaved',{peer:this._id,completedWork:this._completedWork});
             this._peerToHash[this._id] = file[0].hash;
             this._broadcastWork = (this._peers.length > 1);
           }
