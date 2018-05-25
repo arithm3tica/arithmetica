@@ -127,6 +127,7 @@ var latestHash = '';
 var updateTable = false;
 var numPeers = 0;
 var _data = {};
+var dataLink = '';
 
 function workerEvent(eventName, data){
   if(eventName == 'CompletedWork'){
@@ -145,10 +146,13 @@ function workerEvent(eventName, data){
       }
   }
   else if (eventName == 'WorkLoaded'){
+      _data = data;
       totalWorkLoaded += data.workSequenceLength;
       updateTableObject(data.peer, data.work);
       updateIterationsChart(data);
-      _data = data;
+  }
+  else if (eventName == 'WorkSaved'){
+      updateLinktoLatestData(data);
   }
   else if (eventName == 'PeerJoined'){
       addTableObject(data.peer, 0);
@@ -166,7 +170,6 @@ function workerEvent(eventName, data){
 setInterval(() => {
   steps++;
   updateTable = true;
-  updateLinktoLatestData();
   updateSubmissionsChart(steps);
   updateIterationsChart(_data);
 
@@ -208,7 +211,7 @@ function updateIterationsChart(data){
 
     if(maxX < data.work * 0.75){
       shouldUpdate = true;
-      console.log("Should update iterations chart. Max X: " + maxX)
+      //console.log("Should update iterations chart. Max X: " + maxX)
     }
 
     //TODO: consider searching through the iterationsDataset for points not already added to 
@@ -300,7 +303,7 @@ function generateTbodyString() {
   let innerHTML = "";
   let myHTML = "";
   let counter = 1;
-  let link = "-";
+  let link = "<a id='latestData' target='_blank'>-</a>";
   for(let party of participantTable) {
 
       if(party.id !== id){
@@ -309,18 +312,25 @@ function generateTbodyString() {
         counter++;
       }
       else {
-        if(latestHash !== undefined && latestHash.length > 0){
-          link = "<a id='latestData' href='https://ipfs.io/ipfs/"+latestHash+"' target='_blank'>here</a>"
+        if(_data.hasOwnProperty("completedWork")){
+          link = "<a id='latestData' href='"+createInceptionLink(_data)+"' target='_blank'>here</a>";
+        }
+        else if(dataLink.length > 0){
+          link = "<a id='latestData' href='"+dataLink+"'target='_blank'>here</a>";
         }
         myHTML = "<tr> <th scope=\\\"row\\\"> Me </th><td>" + party.id + "</td><td>" + link + "</td><td>" + party.count + "</td></tr>";
+
       }
   }
   innerHTML = myHTML + innerHTML;
   return innerHTML;
 }
 
-function updateLinktoLatestData(){
-  $("#latestData").attr("href","https://ipfs.io/ipfs/" + latestHash);
+function updateLinktoLatestData(data){
+  if(data.hasOwnProperty("completedWork")){
+    dataLink=createInceptionLink(data);
+    $("#latestData").attr("href",dataLink);
+  }
 }
 
 function setupEditor(){
@@ -347,5 +357,10 @@ function setupEditor(){
     assertionEditor.insert('function assertions(original, number, iterations) {\n'+
         '\tif(iterations > 10) return true;\n'+
         '}');
+}
+
+function createInceptionLink(data){
+  var payload = btoa(pako.deflate(JSON.stringify(data.completedWork), { to: 'string' }));
+  return "https://jrhea.github.io/inception/?command=load&type=data#"+payload;
 }
 
