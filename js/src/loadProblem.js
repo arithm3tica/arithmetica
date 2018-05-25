@@ -34,6 +34,9 @@ module.exports = function handleLoadProblemClicked(arithmeticaContract,problemNa
             worker.on('WorkLoaded',(data) => {
                 callback('WorkLoaded',data);
             });
+            worker.on('WorkSaved',(data) => {
+                callback('WorkSaved',data);
+            });
             worker.start();
 
 
