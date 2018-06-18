@@ -44,4 +44,15 @@ contract('Arithmetica', (accounts) => {
         assert.notEqual(checksumUpdate, checksum, "checksum value has not been properly changed on update");
         assert.equal(resultsLocation.split("").reverse("").join(""), resultsLocationValue, "resultsLocation does not match the submitted value");
     })
+    it("instantiates a new problem, deletes problem and validates deletion", async () => {
+        const arithmetica = await Arithmetica.new()
+
+        await arithmetica.createProblem(name, evaluation, assertions, resultsLocation);
+
+        await arithmetica.deleteProblem(name);
+        const owner = await arithmetica.getOwner.call(name);
+        assert.equal(owner, 0, "owner is not an empty address");
+        const count = await arithmetica.getProblemCount.call();
+        assert.equal(count, 0, "problem count was not equal to zero");
+    })
 })

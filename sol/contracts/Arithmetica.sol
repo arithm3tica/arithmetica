@@ -63,7 +63,6 @@ contract Arithmetica {
     //////////////////////////////////////////////////////////////////////////////////
 
     function getOwner(string name) public view returns (address) {
-        require(problemExists(name));
         return mathProblems[name].owner;
     }
 
