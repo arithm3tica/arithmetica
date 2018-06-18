@@ -13,6 +13,7 @@ contract Arithmetica {
 
         bytes32 checksum;
         string resultsLocation;
+        uint index;
     }
     mapping(string => MathTemplate) mathProblems;
     string[] problems;
@@ -20,14 +21,15 @@ contract Arithmetica {
     //////////////////////////////////////////////////////////////////////////////////
     function createProblem(string name, string evaluation, string assertions, string resultsLocation) public {
         require(!problemExists(name));
+
+        problems.push(name);
         mathProblems[name].owner = msg.sender;
         mathProblems[name].evaluation = evaluation;
         mathProblems[name].assertions = assertions;
 
         mathProblems[name].checksum = sha256(evaluation, assertions);
         mathProblems[name].resultsLocation = resultsLocation;
-
-        problems.push(name);
+        mathProblems[name].index = problems.length-1;
     }
 
     function updateProblem(string name, string evaluation, string assertions, string resultsLocation) public {
@@ -43,9 +45,9 @@ contract Arithmetica {
     function deleteProblem(string name) public {
         require(problemExists(name));
         require(msg.sender==mathProblems[name].owner);
-
-        mathProblems[name] = MathTemplate(0x0,"","",0x0,"");
-        //TODO:  need to remove problem from problem array too
+        uint index = mathProblems[name].index;
+        delete mathProblems[name];
+        removeProblem(index);
     }
 
     //////////////////////////////////////////////////////////////////////////////////
@@ -90,6 +92,14 @@ contract Arithmetica {
 
     function problemExists(string name) private view returns (bool) {
         return (mathProblems[name].owner!=0x0);
+    }
+
+    function removeProblem(uint index) private {
+        for (uint i = index; i<problems.length-1; i++){
+            problems[i] = problems[i+1];
+        }
+        delete problems[problems.length-1];
+        problems.length--;
     }
 }
 
