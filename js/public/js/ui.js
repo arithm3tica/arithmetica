@@ -335,7 +335,7 @@ function updateLinktoLatestData(data){
 
 function setupEditor(){
     var evaluationEditor = ace.edit("evaluation-input");
-    evaluationEditor.setTheme("ace/theme/ambiance");
+    evaluationEditor.setTheme("ace/theme/solarized_light");
     evaluationEditor.session.setMode("ace/mode/javascript");
     evaluationEditor.setOption("maxLines", 15);
     evaluationEditor.setOption("minLines", 15);
@@ -343,7 +343,7 @@ function setupEditor(){
 
 
     var assertionEditor = ace.edit("assertion-input");
-    assertionEditor.setTheme("ace/theme/ambiance");
+    assertionEditor.setTheme("ace/theme/solarized_light");
     assertionEditor.session.setMode("ace/mode/javascript");
     assertionEditor.setOption("maxLines", 15);
     assertionEditor.setOption("minLines", 15);
