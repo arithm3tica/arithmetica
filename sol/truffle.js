@@ -1,6 +1,9 @@
 var HDWalletProvider = require("truffle-hdwallet-provider");
 var mnemonic = "feature recycle sick flee erosion void cigar alien reward divert disorder sentence"
+var DefaultBuilder = require("truffle-default-builder");
 module.exports = {
+  build: new DefaultBuilder({
+  }),
   solc: {
     optimizer: {
       enabled: true,
