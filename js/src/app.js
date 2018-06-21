@@ -44,8 +44,8 @@ document.addEventListener("DOMContentLoaded", function() {
         $("#add-problem-button").hide();
         $("#contribute-problem-ui").hide();
     }
-    evaluationEditor = document.getElementById("evaluation-input");
-    assertionEditor = document.getElementById("assertion-input");
+    evaluationEditor = ace.edit("evaluation-input");
+    assertionEditor = ace.edit("assertion-input");
     document.getElementById("submit-problem").addEventListener("click", () => {
         handleCreateProblemClicked(arithmeticaContract, evaluationEditor, assertionEditor)
     });
@@ -112,15 +112,16 @@ function getProblems() {
     var problems = []
     var promises = [];
     return arithmeticaContract.deployed().then(
-        (_instance) => {instance = _instance; return _instance.getProblemCount();}
+        (_instance) => {
+            instance = _instance; 
+            return _instance.getProblemCount();
+        }
     ).then(
         (count) => {
+            count = parseInt(count);
             for(var i = 0; i < count; ++i) {
                 promises.push(instance.getProblemName(i).then((result)=>{
-                    //TODO remove this when contract properly deletes problems
-                    if(result !== "Plus One"){
-                        problems.push(result);
-                    }
+                    problems.push(result);
                 }));
             }
         }

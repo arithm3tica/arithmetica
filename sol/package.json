@@ -5,6 +5,7 @@
   "author": "jonny rhea",
   "license": "ISC",
   "dependencies": {
+    "truffle-default-builder": "^2.0.0",
     "truffle-hdwallet-provider": "0.0.3"
   }
 }
