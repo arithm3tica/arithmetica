@@ -15,7 +15,7 @@ Following the completion of the ETH Denver Hackathon the Arithmetica team plans 
 > Note: Access to an Ethereum Node, or MetaMask is need to define new problems, but not required to contribute to existing ones.
 
 ### How to Use It
-Navigate to: [http://arithmetica.network](http://arithmetica.network "Arithmetica")
+Navigate to: [Arithmetica](http://arithmetica.network/contribute)
 
 
 ## Developers
