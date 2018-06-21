@@ -631,6 +631,7 @@ var updateTable = false;
 var numPeers = 0;
 var _data = {};
 var dataLink = '';
+var disabled = false;
 
 function workerEvent(eventName, data){
   if(eventName == 'CompletedWork'){
@@ -719,7 +720,7 @@ function updateIterationsChart(data){
 
     //TODO: consider searching through the iterationsDataset for points not already added to 
     //the plot.  this would allow us to not have to clear the plot and reload it completely
-    if(data.hasOwnProperty("completedWork")){
+    if(!disabled && shouldUpdate && data.hasOwnProperty("completedWork")){
       iterationsData = [];
       for (var i=1;i<data.work;i++){
         if(data.completedWork.hasOwnProperty(i)){
@@ -733,8 +734,9 @@ function updateIterationsChart(data){
       iterationsChartOptions.end = maxX;
       iterationsChart = new vis.Graph2d(iterationsContainer, iterationsDataset, iterationsChartOptions);
       iterationsChart.fit();
+      disabled = true;
     }
-    else if(maxX < 500 || shouldUpdate){
+    else if(!disabled && (maxX < 500 || shouldUpdate)){
       iterationsDataset.add(iterationsData);
       iterationsChartOptions.end = data.work;
       iterationsChart.fit();
