@@ -45,6 +45,7 @@ module.exports = function handleLoadProblemClicked(arithmeticaContract,problemNa
 }
 
 function buildCode(_code, problemName) {
-    problemName += 1;
+    _code = _code.replace("function evaluation","evaluation");
+    _code = _code.replace("function assertions","assertions");
     return "class Problem extends Worker { constructor(){ super(\'" + problemName + "\'); }" + _code + "} module.exports = Problem;"
 }

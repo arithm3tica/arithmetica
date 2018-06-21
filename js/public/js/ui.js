@@ -352,9 +352,9 @@ function setupEditor(){
     assertionEditor.setOption("highlightActiveLine", false);
 
 
-    evaluationEditor.insert('function evaluation(input) {\n'+
-        '\tinput += 1;\n'+
-        '\treturn input;\n'+
+    evaluationEditor.insert('function evaluation(items) {\n'+
+        '\titems[0] += 1;\n'+
+        '\treturn items;\n'+
         '}');
     assertionEditor.insert('function assertions(original, number, iterations) {\n'+
         '\tif(iterations > 10) return true;\n'+
